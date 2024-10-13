@@ -1,0 +1,63 @@
+@model Bingoo.Models.Room
+
+<h2>Crear Nueva Sala de Bingo</h2>
+
+<form asp-action="CreateRoom" method="post">
+    <!-- Generador de números aleatorios -->
+    <div class="mb-3">
+        <label for="generatorType" class="form-label">Generador de números aleatorios</label>
+        <select class="form-select" id="generatorType" name="GeneratorType" asp-for="GeneratorType">
+            <option value="1">Generador 1</option>
+            <option value="2">Generador 2</option>
+            <option value="3">Generador 3</option>
+        </select>
+    </div>
+
+    <!-- Campo de velocidad (en segundos), oculto inicialmente -->
+    <div class="mb-3" id="speedField" style="display:none;">
+        <label for="speed" class="form-label">Velocidad del lanzamiento de balotas (en segundos)</label>
+        <input type="number" class="form-control" id="speed" name="Speed" min="1" max="10" placeholder="Segundos" />
+    </div>
+
+    <!-- Tipo de marcación -->
+    <div class="mb-3">
+        <label for="markingType" class="form-label">Tipo de marcación</label>
+        <select class="form-select" id="markingType" name="MarkingType" asp-for="MarkingType">
+            <option value="manual">Manual</option>
+            <option value="automatic">Automática</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label for="maxPlayers" class="form-label">Número máximo de jugadores</label>
+        <input type="number" class="form-control" id="maxPlayers" asp-for="MaxPlayers" min="1" max="100" value="10" />
+    </div>
+
+    <div class="mb-3">
+        <label for="gameRules" class="form-label">Reglas del juego</label>
+        <select class="form-select" id="gameRules" name="GameRules" asp-for="GameRules">
+            <option value="linea">Llenar una línea</option>
+            <option value="carton">Llenar el cartón completo</option>
+            <option value="cuatroEsquinas">Cuatro esquinas</option>
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Crear Sala</button>
+</form>
+
+<script>
+    // Mostrar el campo de velocidad solo si la marcación es automática
+    document.getElementById('markingType').addEventListener('change', function() {
+        var markingType = this.value;
+        var speedField = document.getElementById('speedField');
+
+        if (markingType === 'automatic') {
+            speedField.style.display = 'block'; // Mostrar el campo de velocidad
+        } else {
+            speedField.style.display = 'none';  // Ocultar el campo de velocidad
+        }
+    });
+
+    // Ejecutar la función una vez para inicializar correctamente si ya hay un valor preseleccionado
+    document.getElementById('markingType').dispatchEvent(new Event('change'));
+</script>

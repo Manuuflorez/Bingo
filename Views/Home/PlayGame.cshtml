@@ -1,0 +1,134 @@
+@model Bingoo.Models.Room
+
+<h2>Juego de Bingo - Sala: @Model.Owner</h2>
+
+<div id="game-board">
+    <h3>Generador de Números: @Model.GeneratorType</h3>
+    <h3>Velocidad del lanzamiento de balotas: @Model.Speed segundos</h3>
+    <h3>Tipo de marcación: @Model.MarkingType</h3>
+    <h3>Reglas del juego: @Model.GameRules</h3>
+
+    <div id="bingo-board" class="board">
+        <table>
+            @for (int i = 0; i < 5; i++)
+            {
+                <tr>
+                    @for (int j = 0; j < 5; j++)
+                    {
+                        <td class="bingo-cell">@("*")</td> <!-- Las celdas serán reemplazadas con números -->
+                    }
+                </tr>
+            }
+        </table>
+    </div>
+
+    <div id="ball-drawer">
+        <p id="current-ball">Balota actual: -</p>
+    </div>
+
+    <!-- Si la marcación es automática, se maneja automáticamente el inicio del juego -->
+    @if (Model.MarkingType == "automatic")
+    {
+        <p>El juego se iniciará automáticamente con la velocidad seleccionada.</p>
+        <button class="btn btn-success" id="start-game-btn">Iniciar Juego</button>
+        <button class="btn btn-warning" id="pause-game-btn" style="display:none;">Pausar</button>
+    }
+
+    <!-- Mostrar el botón para sacar balotas manualmente si la marcación es manual -->
+    @if (Model.MarkingType == "manual")
+    {
+        <div>
+            <p>Saca las balotas manualmente haciendo clic en el botón a continuación.</p>
+            <button class="btn btn-primary" id="draw-ball-btn">Sacar una Balota</button>
+        </div>
+    }
+</div>
+
+<script>
+    let gameInterval;
+    let isPaused = false;
+
+    // Lógica para iniciar el juego automáticamente si la marcación es automática
+    if ('@Model.MarkingType' === 'automatic') {
+        document.getElementById('start-game-btn').addEventListener('click', function () {
+            const generatorType = '@Model.GeneratorType';
+            const speed = @Model.Speed * 1000;  // Convertimos los segundos a milisegundos
+
+            // Mostrar inmediatamente la primera balota
+            drawBall(generatorType);
+
+            // Iniciar el juego con intervalo basado en la velocidad seleccionada después de la primera balota
+            gameInterval = setInterval(function () {
+                drawBall(generatorType);
+            }, speed);  // Usamos la velocidad configurada por el usuario
+
+            // Cambiar el botón de inicio a pausa
+            document.getElementById('start-game-btn').style.display = 'none';
+            document.getElementById('pause-game-btn').style.display = 'inline-block';
+        });
+
+        // Lógica para pausar y reanudar el juego
+        document.getElementById('pause-game-btn').addEventListener('click', function () {
+            if (!isPaused) {
+                // Pausar el juego
+                clearInterval(gameInterval);
+                isPaused = true;
+                this.textContent = 'Reanudar';
+            } else {
+                // Reanudar el juego
+                const generatorType = '@Model.GeneratorType';
+                const speed = @Model.Speed * 1000;  // Convertimos los segundos a milisegundos
+                gameInterval = setInterval(function () {
+                    drawBall(generatorType);
+                }, speed);
+                isPaused = false;
+                this.textContent = 'Pausar';
+            }
+        });
+    }
+
+    // Lógica para sacar balotas manualmente
+    if ('@Model.MarkingType' === 'manual') {
+        document.getElementById('draw-ball-btn').addEventListener('click', function () {
+            const generatorType = '@Model.GeneratorType';
+            drawBall(generatorType);
+        });
+    }
+
+    // Función para generar y mostrar una balota
+    function drawBall(generatorType) {
+        const ball = generateRandomNumber(generatorType);
+        document.getElementById('current-ball').textContent = "Balota actual: " + ball;
+        markNumberOnBoard(ball);
+    }
+
+    // Función que genera un número basado en el tipo de generador seleccionado al crear la sala
+    function generateRandomNumber(generatorType) {
+        let number;
+        switch (generatorType) {
+            case '1': // Generador básico
+                number = Math.floor(Math.random() * 75) + 1;
+                break;
+            case '2': // Generador con cálculo diferente
+                number = (Math.floor(Math.random() * 75) + 1) * 2 % 75;
+                break;
+            case '3': // Otro tipo de lógica
+                number = Math.ceil(Math.random() * 75);
+                break;
+            default:
+                number = Math.floor(Math.random() * 75) + 1;
+                break;
+        }
+        return number;
+    }
+
+    // Función para marcar un número en el tablero de Bingo automáticamente
+    function markNumberOnBoard(number) {
+        const cells = document.querySelectorAll('.bingo-cell');
+        cells.forEach(cell => {
+            if (cell.textContent === number.toString()) {
+                cell.classList.add('marked');
+            }
+        });
+    }
+</script>

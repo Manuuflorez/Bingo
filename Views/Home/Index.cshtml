@@ -1,0 +1,97 @@
+﻿@{
+    var isAuthenticated = User?.Identity?.IsAuthenticated ?? false;
+    var userName = User?.Identity?.Name ?? "Usuario";
+}
+
+@if (isAuthenticated)
+{
+    <h2>Bienvenido, @userName</h2>
+    <p>Ya puedes empezar a jugar Bingo.</p>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createRoomModal">Crear Sala</button>
+
+    <!-- Modal para la creación de la sala -->
+    <div class="modal fade" id="createRoomModal" tabindex="-1" aria-labelledby="createRoomModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createRoomModalLabel">Crear una nueva sala</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form asp-action="CreateRoom" method="post">
+                        <!-- Generador de números aleatorios -->
+                        <div class="mb-3">
+                            <label for="generatorType" class="form-label">Generador de números aleatorios</label>
+                            <select class="form-select" id="generatorType" name="generatorType">
+                                <option value="1">Generador 1</option>
+                                <option value="2">Generador 2</option>
+                                <option value="3">Generador 3</option>
+                            </select>
+                        </div>
+
+                        <!-- Tipo de marcación -->
+                        <div class="mb-3">
+                            <label for="markingType" class="form-label">Tipo de marcación</label>
+                            <select class="form-select" id="markingType" name="markingType">
+                                <option value="manual">Manual</option>
+                                <option value="automatic">Automática</option>
+                            </select>
+                        </div>
+
+                         <!-- Velocidad del lanzamiento de balotas (oculta si la marcación no es automática) -->
+                        <div class="mb-3" id="speedField" style="display:none;">
+                            <label for="speed" class="form-label">Velocidad del lanzamiento de balotas (en segundos)</label>
+                            <input type="number" class="form-control" id="speed" name="speed" min="1" max="60" placeholder="Segundos" value="5" />
+                        </div>
+
+                        <!-- Número máximo de jugadores -->
+                        <div class="mb-3">
+                            <label for="maxPlayers" class="form-label">Número máximo de jugadores</label>
+                            <input type="number" class="form-control" id="maxPlayers" name="maxPlayers" min="1" max="10" value="10">
+                        </div>
+
+                        <!-- Reglas personalizadas -->
+                        <div class="mb-3">
+                            <label for="gameRules" class="form-label">Reglas del juego</label>
+                            <select class="form-select" id="gameRules" name="gameRules">
+                                <option value="linea">Llenar una línea</option>
+                                <option value="carton">Llenar el cartón completo</option>
+                                <option value="cuatroEsquinas">Cuatro esquinas</option>
+                            </select>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Crear Sala</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+}
+else
+{
+    <h2>Bienvenido a Bingoo</h2>
+    <p>Por favor, <a asp-controller="Account" asp-action="Login">inicia sesión</a> o
+        <a asp-controller="Account" asp-action="Register">regístrate</a> para jugar.
+    </p>
+}
+
+<script>
+    // Mostrar el campo de velocidad solo si la marcación es automática
+    document.getElementById('markingType').addEventListener('change', function() {
+        var markingType = this.value;
+        var speedField = document.getElementById('speedField');
+
+        if (markingType === 'automatic') {
+            speedField.style.display = 'block'; // Mostrar el campo de velocidad
+        } else {
+            speedField.style.display = 'none';  // Ocultar el campo de velocidad
+        }
+    });
+
+    // Ejecutar la función una vez para inicializar correctamente si ya hay un valor preseleccionado
+    document.getElementById('markingType').dispatchEvent(new Event('change'));
+</script>

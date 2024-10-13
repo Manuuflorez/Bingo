@@ -1,0 +1,13 @@
+@model Bingoo.Models.Room
+
+<h2>Detalles de la Sala</h2>
+
+<p><strong>Generador de Números Aleatorios:</strong> @Model.GeneratorType</p>
+<p><strong>Velocidad del Lanzamiento de Balotas:</strong> @Model.Speed</p>
+<p><strong>Tipo de Marcación:</strong> @Model.MarkingType</p>
+<p><strong>Número Máximo de Jugadores:</strong> @Model.MaxPlayers</p>
+<p><strong>Reglas del Juego:</strong> @Model.GameRules</p>
+<p><strong>Creador de la Sala:</strong> @Model.Owner</p>
+<p><strong>Fecha de Creación:</strong> @Model.CreatedAt</p>
+
+<a href="@Url.Action("Index", "Home")" class="btn btn-primary">Volver al Inicio</a>
