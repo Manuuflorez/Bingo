@@ -5,27 +5,25 @@
 namespace Bingoo.Migrations
 {
     /// <inheritdoc />
-    public partial class AddUserNameField : Migration
+    public partial class AddActivePlayersToRoom : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "Name",
-                table: "Users",
-                type: "varchar(100)",
-                maxLength: 100,
+            migrationBuilder.AddColumn<int>(
+                name: "ActivePlayers",
+                table: "Rooms",
+                type: "int",
                 nullable: false,
-                defaultValue: "")
-                .Annotation("MySql:CharSet", "utf8mb4");
+                defaultValue: 0);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "Name",
-                table: "Users");
+                name: "ActivePlayers",
+                table: "Rooms");
         }
     }
 }

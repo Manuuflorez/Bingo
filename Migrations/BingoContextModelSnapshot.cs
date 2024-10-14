@@ -59,6 +59,13 @@ namespace Bingoo.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("ActivePlayers")
+                        .HasColumnType("int");
+
+                    b.Property<string>("AutoMarking")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 

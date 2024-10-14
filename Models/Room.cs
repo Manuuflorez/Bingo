@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic; 
+using Bingoo.Models;    
 
 namespace Bingoo.Models
 {
@@ -13,5 +15,7 @@ namespace Bingoo.Models
         public string GameRules { get; set; } = string.Empty;  // Inicializar con un valor predeterminado
         public DateTime CreatedAt { get; set; } = DateTime.Now;  // Inicializar con la fecha y hora actual
         public string Owner { get; set; } = string.Empty;  // Inicializar con un valor predeterminado
+        public string AutoMarking { get; set; } = string.Empty;
+        public int ActivePlayers { get; set; }
     }
 }

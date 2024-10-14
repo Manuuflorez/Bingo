@@ -5,20 +5,29 @@
 <div id="game-board">
     <h3>Generador de Números: @Model.GeneratorType</h3>
     <h3>Velocidad del lanzamiento de balotas: @Model.Speed segundos</h3>
-    <h3>Tipo de marcación: @Model.MarkingType</h3>
-    <h3>Reglas del juego: @Model.GameRules</h3>
+    <h3>Tipo de lanzamiento: @Model.MarkingType</h3>
+    <h3>¿Marcar automáticamente?: @Model.AutoMarking</h3>
+    <form asp-action="LeaveGame" method="post">
+        <input type="hidden" name="id" value="@Model.Id" />
+        <button type="submit" class="btn btn-danger">Salir de la Sala</button>
+    </form>
 
+
+    <!-- Tablero de Bingo -->
     <div id="bingo-board" class="board">
-        <table>
-            @for (int i = 0; i < 5; i++)
-            {
+        <table id="bingo-table" class="bingo-table">
+            <thead>
                 <tr>
-                    @for (int j = 0; j < 5; j++)
-                    {
-                        <td class="bingo-cell">@("*")</td> <!-- Las celdas serán reemplazadas con números -->
-                    }
+                    <th>B</th>
+                    <th>I</th>
+                    <th>N</th>
+                    <th>G</th>
+                    <th>O</th>
                 </tr>
-            }
+            </thead>
+            <tbody id="bingo-body">
+                <!-- Filas del tablero de Bingo -->
+            </tbody>
         </table>
     </div>
 
@@ -26,7 +35,7 @@
         <p id="current-ball">Balota actual: -</p>
     </div>
 
-    <!-- Si la marcación es automática, se maneja automáticamente el inicio del juego -->
+    <!-- Botón de Pausa/Reanudar y Sacar balotas dependiendo del tipo de lanzamiento -->
     @if (Model.MarkingType == "automatic")
     {
         <p>El juego se iniciará automáticamente con la velocidad seleccionada.</p>
@@ -34,7 +43,6 @@
         <button class="btn btn-warning" id="pause-game-btn" style="display:none;">Pausar</button>
     }
 
-    <!-- Mostrar el botón para sacar balotas manualmente si la marcación es manual -->
     @if (Model.MarkingType == "manual")
     {
         <div>
@@ -44,11 +52,129 @@
     }
 </div>
 
+<!-- Estilos personalizados para el tablero de Bingo -->
+<style>
+    .bingo-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+
+    .bingo-table th,
+    .bingo-table td {
+        border: 2px solid #000;
+        text-align: center;
+        padding: 15px;
+        font-size: 20px;
+        width: 50px;
+        height: 50px;
+    }
+
+    .bingo-table th {
+        background-color: #f0f0f0;
+        font-size: 22px;
+    }
+
+    .bingo-cell {
+        background-color: #ffffff;
+        color: #333;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .bingo-cell.marked {
+        background-color: #4CAF50;
+        color: #fff;
+        font-weight: bold;
+    }
+
+    .bingo-cell:hover {
+        background-color: #ddd;
+    }
+
+    .bingo-cell-free {
+        background-color: #FFA500;
+        color: #fff;
+        font-weight: bold;
+    }
+
+    #current-ball {
+        margin-top: 20px;
+        font-size: 24px;
+        font-weight: bold;
+    }
+</style>
+
 <script>
     let gameInterval;
     let isPaused = false;
+    const autoMarking = '@Model.AutoMarking';  // Marcar automáticamente o no
 
-    // Lógica para iniciar el juego automáticamente si la marcación es automática
+    // Generar el tablero de Bingo con números aleatorios
+    function generateBingoBoard() {
+        const bingoBoard = document.getElementById('bingo-body');
+        bingoBoard.innerHTML = '';
+
+        const columns = {
+            B: generateUniqueNumbers(1, 15),
+            I: generateUniqueNumbers(16, 30),
+            N: generateUniqueNumbers(31, 45),
+            G: generateUniqueNumbers(46, 60),
+            O: generateUniqueNumbers(61, 75)
+        };
+
+        for (let i = 0; i < 5; i++) {
+            const row = document.createElement('tr');
+
+            Object.keys(columns).forEach(col => {
+                const cell = document.createElement('td');
+                cell.classList.add('bingo-cell');
+
+                // Colocar la casilla central "FREE" en la columna "N"
+                if (col === 'N' && i === 2) {
+                    cell.textContent = 'FREE';
+                    cell.classList.add('bingo-cell-free'); // Casilla FREE con estilo especial
+                } else {
+                    cell.textContent = columns[col][i];
+                }
+                row.appendChild(cell);
+            });
+
+            bingoBoard.appendChild(row);
+        }
+
+        // Añadir evento para marcar manualmente si no es autoMarking
+        if (autoMarking === 'no') {
+            addManualMarkingListeners();
+        }
+    }
+
+    // Añadir eventos a las celdas para marcación manual
+    function addManualMarkingListeners() {
+        const cells = document.querySelectorAll('.bingo-cell');
+        cells.forEach(cell => {
+            cell.addEventListener('click', function () {
+                const currentBall = parseInt(document.getElementById('current-ball').textContent.split(": ")[1]);
+                if (parseInt(cell.textContent) === currentBall) {
+                    cell.classList.add('marked');
+                }
+            });
+        });
+    }
+
+    // Generar un conjunto de números únicos dentro de un rango
+    function generateUniqueNumbers(min, max) {
+        const numbers = [];
+        while (numbers.length < 5) {
+            const num = Math.floor(Math.random() * (max - min + 1)) + min;
+            if (!numbers.includes(num)) {
+                numbers.push(num);
+            }
+        }
+        return numbers;
+    }
+
+    // Lógica para iniciar el juego automáticamente si el lanzamiento es automático
     if ('@Model.MarkingType' === 'automatic') {
         document.getElementById('start-game-btn').addEventListener('click', function () {
             const generatorType = '@Model.GeneratorType';
@@ -99,7 +225,11 @@
     function drawBall(generatorType) {
         const ball = generateRandomNumber(generatorType);
         document.getElementById('current-ball').textContent = "Balota actual: " + ball;
-        markNumberOnBoard(ball);
+
+        // Marcar automáticamente si la opción está habilitada
+        if (autoMarking === 'yes') {
+            markNumberOnBoard(ball);
+        }
     }
 
     // Función que genera un número basado en el tipo de generador seleccionado al crear la sala
@@ -126,9 +256,12 @@
     function markNumberOnBoard(number) {
         const cells = document.querySelectorAll('.bingo-cell');
         cells.forEach(cell => {
-            if (cell.textContent === number.toString()) {
+            if (parseInt(cell.textContent) === number) {
                 cell.classList.add('marked');
             }
         });
     }
+
+    // Generar el tablero de Bingo cuando la página carga
+    window.onload = generateBingoBoard;
 </script>

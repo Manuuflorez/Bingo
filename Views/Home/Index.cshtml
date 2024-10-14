@@ -1,4 +1,5 @@
-﻿@{
+﻿@model IEnumerable<Bingoo.Models.Room>
+@{
     var isAuthenticated = User?.Identity?.IsAuthenticated ?? false;
     var userName = User?.Identity?.Name ?? "Usuario";
 }
@@ -7,7 +8,43 @@
 {
     <h2>Bienvenido, @userName</h2>
     <p>Ya puedes empezar a jugar Bingo.</p>
+
+    <!-- Botón para crear una nueva sala -->
     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createRoomModal">Crear Sala</button>
+
+    <!-- Mostrar las salas activas -->
+    <h3>Salas Activas</h3>
+
+    @if (Model != null && Model.Any())
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Propietario</th>
+                    <th>Jugadores Activos</th>
+                    <th>Capacidad</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var room in Model)
+                {
+                    <tr>
+                        <td>@room.Owner</td>
+                        <td>@room.ActivePlayers</td>
+                        <td>@room.MaxPlayers</td>
+                        <td>
+                            <a class="btn btn-primary" asp-action="PlayGame" asp-route-id="@room.Id">Unirse</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No hay salas activas en este momento. ¡Crea una nueva sala para empezar a jugar!</p>
+    }
 
     <!-- Modal para la creación de la sala -->
     <div class="modal fade" id="createRoomModal" tabindex="-1" aria-labelledby="createRoomModalLabel" aria-hidden="true">
@@ -29,19 +66,28 @@
                             </select>
                         </div>
 
-                        <!-- Tipo de marcación -->
+                        <!-- Tipo de lanzamiento -->
                         <div class="mb-3">
-                            <label for="markingType" class="form-label">Tipo de marcación</label>
+                            <label for="markingType" class="form-label">Tipo de lanzamiento</label>
                             <select class="form-select" id="markingType" name="markingType">
                                 <option value="manual">Manual</option>
                                 <option value="automatic">Automática</option>
                             </select>
                         </div>
 
-                         <!-- Velocidad del lanzamiento de balotas (oculta si la marcación no es automática) -->
+                        <!-- Velocidad del lanzamiento de balotas (oculta si el lanzamiento no es automático) -->
                         <div class="mb-3" id="speedField" style="display:none;">
                             <label for="speed" class="form-label">Velocidad del lanzamiento de balotas (en segundos)</label>
                             <input type="number" class="form-control" id="speed" name="speed" min="1" max="60" placeholder="Segundos" value="5" />
+                        </div>
+
+                        <!-- Opción para elegir si las balotas se marcan automáticamente o manualmente -->
+                        <div class="mb-3">
+                            <label for="autoMarking" class="form-label">¿Marcar balotas automáticamente?</label>
+                            <select class="form-select" id="autoMarking" name="AutoMarking">
+                                <option value="yes">Sí</option>
+                                <option value="no">No</option>
+                            </select>
                         </div>
 
                         <!-- Número máximo de jugadores -->
@@ -69,7 +115,6 @@
             </div>
         </div>
     </div>
-
 }
 else
 {
@@ -80,7 +125,7 @@ else
 }
 
 <script>
-    // Mostrar el campo de velocidad solo si la marcación es automática
+    // Mostrar el campo de velocidad solo si el lanzamiento es automático
     document.getElementById('markingType').addEventListener('change', function() {
         var markingType = this.value;
         var speedField = document.getElementById('speedField');

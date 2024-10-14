@@ -18,13 +18,9 @@ namespace Bingoo.Controllers
 
         public IActionResult Index()
         {
-            // Verificar si el usuario está autenticado
-            if (User?.Identity?.IsAuthenticated != true)
-            {
-                return RedirectToAction("Login", "Account");
-            }
-
-            return View();
+            // Obtener todas las salas activas (con al menos 1 jugador)
+            var activeRooms = _context.Rooms.Where(r => r.ActivePlayers > 0).ToList();
+            return View(activeRooms);
         }
 
         [HttpGet]
@@ -86,18 +82,47 @@ namespace Bingoo.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public IActionResult PlayGame(int id)
         {
-            // Buscar la sala en la base de datos
             var room = _context.Rooms.FirstOrDefault(r => r.Id == id);
             if (room == null)
             {
                 return NotFound();
             }
 
+            // Incrementar el número de jugadores activos
+            room.ActivePlayers++;
+            _context.SaveChanges();
+
             // Pasar las características de la sala a la vista del juego
-            return View(room);  // Pasamos el objeto 'room' completo para acceder al generador, velocidad, etc.
+            return View(room);
         }
+
+        [HttpPost]
+        [Authorize]  // Asegúrate de que el usuario esté autenticado
+        public IActionResult LeaveGame(int id)
+        {
+            var room = _context.Rooms.FirstOrDefault(r => r.Id == id);
+            if (room == null)
+            {
+                return NotFound();  // Devolver 404 si la sala no se encuentra
+            }
+
+            // Lógica para decrementar los jugadores activos o eliminar la sala
+            room.ActivePlayers--;
+
+            // Si no hay jugadores activos, eliminar la sala
+            if (room.ActivePlayers <= 0)
+            {
+                _context.Rooms.Remove(room);
+            }
+
+            _context.SaveChanges();
+
+            return RedirectToAction("Index");  // Redirigir al inicio después de dejar la sala
+        }
+
 
     }
 }

@@ -19,12 +19,21 @@
         <input type="number" class="form-control" id="speed" name="Speed" min="1" max="10" placeholder="Segundos" />
     </div>
 
-    <!-- Tipo de marcación -->
+    <!-- Tipo de lanzamiento -->
     <div class="mb-3">
-        <label for="markingType" class="form-label">Tipo de marcación</label>
+        <label for="markingType" class="form-label">Tipo de lanzamiento</label>
         <select class="form-select" id="markingType" name="MarkingType" asp-for="MarkingType">
             <option value="manual">Manual</option>
             <option value="automatic">Automática</option>
+        </select>
+    </div>
+
+ <!-- Opción para elegir marcación automática o manual -->
+    <div class="mb-3">
+        <label for="autoMarking" class="form-label">¿Marcar balotas automáticamente?</label>
+        <select class="form-select" id="autoMarking" name="AutoMarking">
+            <option value="yes">Sí</option>
+            <option value="no">No</option>
         </select>
     </div>
 
@@ -46,7 +55,7 @@
 </form>
 
 <script>
-    // Mostrar el campo de velocidad solo si la marcación es automática
+    // Mostrar el campo de velocidad solo si el lanzamiento es automático
     document.getElementById('markingType').addEventListener('change', function() {
         var markingType = this.value;
         var speedField = document.getElementById('speedField');
