@@ -1,17 +1,19 @@
 @model Bingoo.Models.Room
 
-<h2>Juego de Bingo - Sala: @Model.Owner</h2>
+<h2>Sala de Bingo - Sala: @Model.Owner</h2>
+
+<!-- Sección para mostrar los usuarios conectados -->
+<h3>Usuarios Conectados</h3>
+<ul id="usersList">
+    <!-- Aquí se mostrará la lista de usuarios conectados -->
+</ul>
 
 <div id="game-board">
-    <h3>Generador de Números: @Model.GeneratorType</h3>
     <h3>Velocidad del lanzamiento de balotas: @Model.Speed segundos</h3>
-    <h3>Tipo de lanzamiento: @Model.MarkingType</h3>
-    <h3>¿Marcar automáticamente?: @Model.AutoMarking</h3>
     <form asp-action="LeaveGame" method="post">
         <input type="hidden" name="id" value="@Model.Id" />
         <button type="submit" class="btn btn-danger">Salir de la Sala</button>
     </form>
-
 
     <!-- Tablero de Bingo -->
     <div id="bingo-board" class="board">
@@ -105,10 +107,62 @@
     }
 </style>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
+
 <script>
     let gameInterval;
     let isPaused = false;
     const autoMarking = '@Model.AutoMarking';  // Marcar automáticamente o no
+
+    // Crear una conexión con SignalR al Hub
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/bingohub")
+        .build();
+
+    const roomId = "@Model.Id";
+    const userName = "@(User.Identity?.Name ?? "Invitado")";
+
+    // Conectar al hub cuando la página esté lista
+    connection.start().then(function() {
+        // Unirse a la sala
+        connection.invoke("JoinRoom", roomId, userName);
+    });
+
+    // Manejar la actualización de la lista de usuarios cuando alguien se une
+    connection.on("UserJoined", function(userName) {
+        const userList = document.getElementById("usersList");
+        const newUser = document.createElement("li");
+        newUser.textContent = userName;
+        newUser.id = userName;
+        userList.appendChild(newUser);
+    });
+
+    // Manejar la eliminación de un usuario de la lista cuando alguien se va
+    connection.on("UserLeft", function(userName) {
+        const userElement = document.getElementById(userName);
+        if (userElement) {
+            userElement.remove();
+        }
+    });
+
+    // Actualizar la lista de usuarios conectados en tiempo real
+    connection.on("UpdateUserList", function(users) {
+        const userList = document.getElementById("usersList");
+        userList.innerHTML = ''; // Limpiar la lista de usuarios
+
+        // Recorrer la lista de usuarios y añadirlos a la lista visual
+        users.forEach(function(user) {
+            const newUser = document.createElement("li");
+            newUser.textContent = user;
+            newUser.id = user;
+            userList.appendChild(newUser);
+        });
+    });
+
+    // Salir de la sala cuando se cierre la página
+    window.addEventListener("beforeunload", function () {
+        connection.invoke("LeaveRoom", roomId, userName);
+    });
 
     // Generar el tablero de Bingo con números aleatorios
     function generateBingoBoard() {
@@ -265,3 +319,4 @@
     // Generar el tablero de Bingo cuando la página carga
     window.onload = generateBingoBoard;
 </script>
+

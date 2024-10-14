@@ -22,6 +22,9 @@ builder.Services.AddDbContext<BingoContext>(options =>
     options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
     new MySqlServerVersion(new Version(8, 0, 25))));
 
+// **Agregar los servicios de SignalR**
+builder.Services.AddSignalR();
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -37,6 +40,9 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// **Mapear el Hub de SignalR**
+app.MapHub<BingoHub>("/bingohub");
 
 app.MapControllerRoute(
     name: "default",
