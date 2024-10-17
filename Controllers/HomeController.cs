@@ -23,7 +23,7 @@ namespace Bingoo.Controllers
             // Obtener todas las salas y luego filtrar en memoria para evitar problemas de traducción con listas de cadenas
             var rooms = _context.Rooms
                 .Where(r => r.ActivePlayers > 0 || r.GameStarted)
-                .AsEnumerable()  // Esto fuerza a EF Core a traer los datos antes de filtrar en memoria
+                .AsEnumerable()
                 .Where(r => r.ActivePlayers > 0
                             || r.GameStarted
                             || (r.Players != null && currentUserName != null && r.Players.Contains(currentUserName))
@@ -33,18 +33,14 @@ namespace Bingoo.Controllers
             return View(rooms);
         }
 
-
-
         [HttpGet]
         public IActionResult CreateRoom()
         {
-            // Si el usuario no está autenticado, redirigir al login
             if (User?.Identity?.IsAuthenticated != true)
             {
                 return RedirectToAction("Login", "Account");
             }
 
-            // Devolver la vista para la creación de sala
             return View();
         }
 
@@ -60,30 +56,47 @@ namespace Bingoo.Controllers
 
             var currentUserName = User.Identity?.Name;
 
-            // Verificar si el nombre de usuario no es nulo antes de proceder
             if (currentUserName == null)
             {
-                // Redirigir o mostrar un mensaje de error, según sea necesario
-                return RedirectToAction("Index");  // O manejarlo de otra manera adecuada
+                return RedirectToAction("Index");
+            }
+
+            // Permitir siempre al creador de la sala acceder a su propia sala
+            if (room.Owner == currentUserName)
+            {
+                if (!room.Players.Contains(currentUserName))
+                {
+                    room.Players.Add(currentUserName);
+                    room.ActivePlayers = room.Players.Count;
+                    _context.SaveChanges();
+                }
+
+                return View(room);
+            }
+
+            // Verificar si el número máximo de jugadores ya se ha alcanzado
+            if (room.ActivePlayers >= room.MaxPlayers)
+            {
+                TempData["ErrorMessage"] = "La sala ya ha alcanzado el número máximo de jugadores.";
+                return RedirectToAction("Index");
             }
 
             // Verificar si el usuario ya está en la lista de jugadores o en la lista de jugadores previos
             if (!room.Players.Contains(currentUserName) && (room.GameStarted && room.PreviousPlayers.Contains(currentUserName)))
             {
                 room.Players.Add(currentUserName);
-                room.ActivePlayers++;
+                room.ActivePlayers = room.Players.Count;
                 _context.SaveChanges();
             }
             else if (!room.Players.Contains(currentUserName) && !room.GameStarted)
             {
                 room.Players.Add(currentUserName);
-                room.ActivePlayers++;
+                room.ActivePlayers = room.Players.Count;
                 _context.SaveChanges();
             }
 
             return View(room);
         }
-
 
 
         [HttpPost]
@@ -91,29 +104,24 @@ namespace Bingoo.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Establecer la fecha de creación y el dueño de la sala
                 room.CreatedAt = DateTime.Now;
-                room.Owner = User?.Identity?.Name ?? "Anónimo"; // Nombre del usuario o Anónimo si no tiene nombre
-                room.GameStarted = false; // Inicialmente, el juego no ha empezado
-                room.ActivePlayers = 1; // El dueño de la sala se cuenta como el primer jugador activo
-                room.Players = new List<string> { room.Owner }; // Agregar el dueño como jugador en la lista de jugadores
+                room.Owner = User?.Identity?.Name ?? "Anónimo";
+                room.GameStarted = false;
+                room.ActivePlayers = 1;
+                room.Players = new List<string> { room.Owner };
 
-                // Guardar la sala en la base de datos
                 _context.Rooms.Add(room);
                 _context.SaveChanges();
 
-                // Redirigir a los detalles de la sala creada
                 return RedirectToAction("PlayGame", new { id = room.Id });
             }
 
-            // Si hay errores en el modelo, devolver la vista con el formulario de creación
             return View(room);
         }
 
         [HttpGet]
         public IActionResult RoomDetails(int id)
         {
-            // Buscar la sala en la base de datos
             var room = _context.Rooms.FirstOrDefault(r => r.Id == id);
             if (room == null)
             {
@@ -141,48 +149,40 @@ namespace Bingoo.Controllers
             var room = _context.Rooms.FirstOrDefault(r => r.Id == id);
             if (room == null)
             {
-                return NotFound();  // Devolver 404 si la sala no se encuentra
+                return NotFound();
             }
 
             var currentUserName = User.Identity?.Name;
 
-            // Verificar si el nombre de usuario no es nulo antes de proceder
             if (currentUserName == null)
             {
-                // Redirigir o mostrar un mensaje de error, según sea necesario
-                return RedirectToAction("Index");  // O manejarlo de otra manera adecuada
+                return RedirectToAction("Index");
             }
 
-            // Verificar si el usuario está en la lista de jugadores actuales
             if (room.Players.Contains(currentUserName))
             {
                 room.Players.Remove(currentUserName);
                 room.ActivePlayers--;
 
-                // Agregar al jugador a la lista de PreviousPlayers si no está ya en ella
                 if (!room.PreviousPlayers.Contains(currentUserName))
                 {
                     room.PreviousPlayers.Add(currentUserName);
                 }
 
-                // Si hay jugadores en la sala, no la eliminamos
                 if (room.ActivePlayers > 0)
                 {
                     _context.SaveChanges();
-                    return RedirectToAction("Index");  // Redirigir al inicio
+                    return RedirectToAction("Index");
                 }
                 else
                 {
-                    // No hay jugadores restantes, eliminar la sala
                     _context.Rooms.Remove(room);
                 }
             }
 
             _context.SaveChanges();
-            return RedirectToAction("Index");  // Redirigir al inicio después de dejar la sala
+            return RedirectToAction("Index");
         }
-
-
 
         [HttpPost]
         [Authorize]
@@ -200,4 +200,3 @@ namespace Bingoo.Controllers
         }
     }
 }
-
