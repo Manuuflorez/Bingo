@@ -63,6 +63,24 @@
             <button class="btn btn-primary" id="draw-ball-btn">Sacar una Balota</button>
         </div>
     }
+    <!-- Modal de Victoria -->
+<div class="modal fade" id="victoryModal" tabindex="-1" aria-labelledby="victoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="victoryModalLabel">¡Felicidades!</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="victoryMessage">Has ganado el juego.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 </div>
 
 <!-- Estilos personalizados para el tablero de Bingo -->
@@ -124,7 +142,7 @@
     let gameInterval;
     let isPaused = false;
     const autoMarking = '@Model.AutoMarking';
-    const gameRules = '@Model.GameRules'; // Obtiene la configuración de las reglas del juego
+    const gameRules = '@Model.GameRules';
 
     const connection = new signalR.HubConnectionBuilder()
         .withUrl("/bingohub")
@@ -311,23 +329,40 @@
         const cells = document.querySelectorAll('.bingo-cell');
         const markedCells = Array.from(cells).filter(cell => cell.classList.contains('marked'));
 
+        let winMessage = '';
+        let hasWon = false;
+
         switch (gameRules) {
             case 'linea':
                 if (checkLineWin()) {
-                    alert('¡Felicidades, ganaste al completar una línea!');
+                    winMessage = '¡Felicidades, ganaste al completar una línea!';
+                    hasWon = true;
                 }
                 break;
             case 'carton':
                 if (markedCells.length === 24) {
-                    alert('¡Felicidades, ganaste al llenar el cartón completo!');
+                    winMessage = '¡Felicidades, ganaste al llenar el cartón completo!';
+                    hasWon = true;
                 }
                 break;
             case 'cuatroEsquinas':
                 if (checkCornersWin()) {
-                    alert('¡Felicidades, ganaste con las cuatro esquinas!');
+                    winMessage = '¡Felicidades, ganaste con las cuatro esquinas!';
+                    hasWon = true;
                 }
                 break;
         }
+
+        if (hasWon) {
+            showVictoryModal(winMessage);
+        }
+    }
+
+    function showVictoryModal(message) {
+        const victoryMessage = document.getElementById('victoryMessage');
+        victoryMessage.textContent = message;
+        const victoryModal = new bootstrap.Modal(document.getElementById('victoryModal'));
+        victoryModal.show();
     }
 
     function checkLineWin() {
@@ -347,5 +382,6 @@
 
     window.onload = generateBingoBoard;
 </script>
+
 
 
