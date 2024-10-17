@@ -123,9 +123,9 @@
 <script>
     let gameInterval;
     let isPaused = false;
-    const autoMarking = '@Model.AutoMarking';  // Marcar automáticamente o no
+    const autoMarking = '@Model.AutoMarking';
+    const gameRules = '@Model.GameRules'; // Obtiene la configuración de las reglas del juego
 
-    // Crear una conexión con SignalR al Hub
     const connection = new signalR.HubConnectionBuilder()
         .withUrl("/bingohub")
         .build();
@@ -133,27 +133,22 @@
     const roomId = "@Model.Id";
     const userName = '@(User?.Identity?.Name ?? "Invitado")';
 
-    // Conectar al hub cuando la página esté lista
     connection.start().then(function () {
-        // Unirse a la sala
         connection.invoke("JoinRoom", roomId, userName);
     });
 
-    // Manejar la actualización de la lista de jugadores activos cuando cambia
     connection.on("UpdateUserList", function (activePlayers) {
         if (activePlayers && activePlayers.length !== undefined) {
             document.getElementById('activePlayers').textContent = activePlayers.length;
         }
     });
 
-    // Salir de la sala cuando se cierre la página
     window.addEventListener("beforeunload", function () {
         if (roomId && userName) {
             connection.invoke("LeaveRoom", roomId, userName);
         }
     });
 
-    // Generar el tablero de Bingo con números aleatorios
     function generateBingoBoard() {
         const bingoBoard = document.getElementById('bingo-body');
         const savedBoard = localStorage.getItem(`BingoBoard_${roomId}`);
@@ -211,6 +206,7 @@
                 if (parseInt(cell.textContent) === currentBall) {
                     cell.classList.add('marked');
                     saveMarkedNumber(parseInt(cell.textContent));
+                    checkWinCondition();
                 }
             });
         });
@@ -278,6 +274,7 @@
         document.getElementById('current-ball').textContent = "Balota actual: " + ball;
         if (autoMarking === 'yes') {
             markNumberOnBoard(ball);
+            checkWinCondition();
         }
     }
 
@@ -310,6 +307,45 @@
         });
     }
 
+    function checkWinCondition() {
+        const cells = document.querySelectorAll('.bingo-cell');
+        const markedCells = Array.from(cells).filter(cell => cell.classList.contains('marked'));
+
+        switch (gameRules) {
+            case 'linea':
+                if (checkLineWin()) {
+                    alert('¡Felicidades, ganaste al completar una línea!');
+                }
+                break;
+            case 'carton':
+                if (markedCells.length === 24) {
+                    alert('¡Felicidades, ganaste al llenar el cartón completo!');
+                }
+                break;
+            case 'cuatroEsquinas':
+                if (checkCornersWin()) {
+                    alert('¡Felicidades, ganaste con las cuatro esquinas!');
+                }
+                break;
+        }
+    }
+
+    function checkLineWin() {
+        const rows = document.querySelectorAll('#bingo-table tbody tr');
+        return Array.from(rows).some(row => Array.from(row.children).every(cell => cell.classList.contains('marked') || cell.classList.contains('bingo-cell-free')));
+    }
+
+    function checkCornersWin() {
+        const corners = [
+            document.querySelector('#bingo-table tbody tr:first-child td:first-child'),
+            document.querySelector('#bingo-table tbody tr:first-child td:last-child'),
+            document.querySelector('#bingo-table tbody tr:last-child td:first-child'),
+            document.querySelector('#bingo-table tbody tr:last-child td:last-child')
+        ];
+        return corners.every(cell => cell.classList.contains('marked'));
+    }
+
     window.onload = generateBingoBoard;
 </script>
+
 
