@@ -17,5 +17,6 @@ namespace Bingoo.Models
         public string Owner { get; set; } = string.Empty;  // Inicializar con un valor predeterminado
         public string AutoMarking { get; set; } = string.Empty;
         public int ActivePlayers { get; set; }
+        public bool GameStarted { get; set; }
     }
 }

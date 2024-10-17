@@ -1,12 +1,8 @@
 @model Bingoo.Models.Room
 
-<h2>Sala de Bingo - Sala: @Model.Owner</h2>
+<h2>Sala: @Model.Owner</h2>
 
-<!-- Sección para mostrar los usuarios conectados -->
-<h3>Usuarios Conectados</h3>
-<ul id="usersList">
-    <!-- Aquí se mostrará la lista de usuarios conectados -->
-</ul>
+<h3>Jugadores Activos: <span id="activePlayers">@Model.ActivePlayers</span></h3>
 
 <div id="game-board">
     <h3>Velocidad del lanzamiento de balotas: @Model.Speed segundos</h3>
@@ -128,35 +124,9 @@
         connection.invoke("JoinRoom", roomId, userName);
     });
 
-    // Manejar la actualización de la lista de usuarios cuando alguien se une
-    connection.on("UserJoined", function(userName) {
-        const userList = document.getElementById("usersList");
-        const newUser = document.createElement("li");
-        newUser.textContent = userName;
-        newUser.id = userName;
-        userList.appendChild(newUser);
-    });
-
-    // Manejar la eliminación de un usuario de la lista cuando alguien se va
-    connection.on("UserLeft", function(userName) {
-        const userElement = document.getElementById(userName);
-        if (userElement) {
-            userElement.remove();
-        }
-    });
-
-    // Actualizar la lista de usuarios conectados en tiempo real
-    connection.on("UpdateUserList", function(users) {
-        const userList = document.getElementById("usersList");
-        userList.innerHTML = ''; // Limpiar la lista de usuarios
-
-        // Recorrer la lista de usuarios y añadirlos a la lista visual
-        users.forEach(function(user) {
-            const newUser = document.createElement("li");
-            newUser.textContent = user;
-            newUser.id = user;
-            userList.appendChild(newUser);
-        });
+    // Manejar la actualización de la lista de jugadores activos cuando cambia
+    connection.on("UpdateUserList", function(activePlayers) {
+        document.getElementById('activePlayers').textContent = activePlayers.length;
     });
 
     // Salir de la sala cuando se cierre la página
@@ -167,8 +137,41 @@
     // Generar el tablero de Bingo con números aleatorios
     function generateBingoBoard() {
         const bingoBoard = document.getElementById('bingo-body');
+        const savedBoard = localStorage.getItem(`BingoBoard_${roomId}`);
+        const savedMarked = localStorage.getItem(`MarkedNumbers_${roomId}`);
+        const board = savedBoard ? JSON.parse(savedBoard) : createNewBoard();
+        const markedNumbers = savedMarked ? JSON.parse(savedMarked) : [];
+
         bingoBoard.innerHTML = '';
 
+        board.forEach((col, colIndex) => {
+            const row = document.createElement('tr');
+            col.forEach((num, rowIndex) => {
+                const cell = document.createElement('td');
+                cell.classList.add('bingo-cell');
+
+                if (colIndex === 2 && rowIndex === 2) {
+                    cell.textContent = 'FREE';
+                    cell.classList.add('bingo-cell-free');
+                } else {
+                    cell.textContent = num;
+                }
+
+                if (markedNumbers.includes(num)) {
+                    cell.classList.add('marked');
+                }
+
+                row.appendChild(cell);
+            });
+            bingoBoard.appendChild(row);
+        });
+
+        if (autoMarking === 'no') {
+            addManualMarkingListeners();
+        }
+    }
+
+    function createNewBoard() {
         const columns = {
             B: generateUniqueNumbers(1, 15),
             I: generateUniqueNumbers(16, 30),
@@ -176,34 +179,11 @@
             G: generateUniqueNumbers(46, 60),
             O: generateUniqueNumbers(61, 75)
         };
-
-        for (let i = 0; i < 5; i++) {
-            const row = document.createElement('tr');
-
-            Object.keys(columns).forEach(col => {
-                const cell = document.createElement('td');
-                cell.classList.add('bingo-cell');
-
-                // Colocar la casilla central "FREE" en la columna "N"
-                if (col === 'N' && i === 2) {
-                    cell.textContent = 'FREE';
-                    cell.classList.add('bingo-cell-free'); // Casilla FREE con estilo especial
-                } else {
-                    cell.textContent = columns[col][i];
-                }
-                row.appendChild(cell);
-            });
-
-            bingoBoard.appendChild(row);
-        }
-
-        // Añadir evento para marcar manualmente si no es autoMarking
-        if (autoMarking === 'no') {
-            addManualMarkingListeners();
-        }
+        const board = [columns.B, columns.I, columns.N, columns.G, columns.O];
+        localStorage.setItem(`BingoBoard_${roomId}`, JSON.stringify(board));
+        return board;
     }
 
-    // Añadir eventos a las celdas para marcación manual
     function addManualMarkingListeners() {
         const cells = document.querySelectorAll('.bingo-cell');
         cells.forEach(cell => {
@@ -211,12 +191,20 @@
                 const currentBall = parseInt(document.getElementById('current-ball').textContent.split(": ")[1]);
                 if (parseInt(cell.textContent) === currentBall) {
                     cell.classList.add('marked');
+                    saveMarkedNumber(parseInt(cell.textContent));
                 }
             });
         });
     }
 
-    // Generar un conjunto de números únicos dentro de un rango
+    function saveMarkedNumber(number) {
+        const markedNumbers = JSON.parse(localStorage.getItem(`MarkedNumbers_${roomId}`)) || [];
+        if (!markedNumbers.includes(number)) {
+            markedNumbers.push(number);
+            localStorage.setItem(`MarkedNumbers_${roomId}`, JSON.stringify(markedNumbers));
+        }
+    }
+
     function generateUniqueNumbers(min, max) {
         const numbers = [];
         while (numbers.length < 5) {
@@ -228,36 +216,28 @@
         return numbers;
     }
 
-    // Lógica para iniciar el juego automáticamente si el lanzamiento es automático
     if ('@Model.MarkingType' === 'automatic') {
         document.getElementById('start-game-btn').addEventListener('click', function () {
             const generatorType = '@Model.GeneratorType';
-            const speed = @Model.Speed * 1000;  // Convertimos los segundos a milisegundos
+            const speed = @Model.Speed * 1000;
 
-            // Mostrar inmediatamente la primera balota
             drawBall(generatorType);
-
-            // Iniciar el juego con intervalo basado en la velocidad seleccionada después de la primera balota
             gameInterval = setInterval(function () {
                 drawBall(generatorType);
-            }, speed);  // Usamos la velocidad configurada por el usuario
+            }, speed);
 
-            // Cambiar el botón de inicio a pausa
             document.getElementById('start-game-btn').style.display = 'none';
             document.getElementById('pause-game-btn').style.display = 'inline-block';
         });
 
-        // Lógica para pausar y reanudar el juego
         document.getElementById('pause-game-btn').addEventListener('click', function () {
             if (!isPaused) {
-                // Pausar el juego
                 clearInterval(gameInterval);
                 isPaused = true;
                 this.textContent = 'Reanudar';
             } else {
-                // Reanudar el juego
                 const generatorType = '@Model.GeneratorType';
-                const speed = @Model.Speed * 1000;  // Convertimos los segundos a milisegundos
+                const speed = @Model.Speed * 1000;
                 gameInterval = setInterval(function () {
                     drawBall(generatorType);
                 }, speed);
@@ -267,7 +247,6 @@
         });
     }
 
-    // Lógica para sacar balotas manualmente
     if ('@Model.MarkingType' === 'manual') {
         document.getElementById('draw-ball-btn').addEventListener('click', function () {
             const generatorType = '@Model.GeneratorType';
@@ -275,28 +254,24 @@
         });
     }
 
-    // Función para generar y mostrar una balota
     function drawBall(generatorType) {
         const ball = generateRandomNumber(generatorType);
         document.getElementById('current-ball').textContent = "Balota actual: " + ball;
-
-        // Marcar automáticamente si la opción está habilitada
         if (autoMarking === 'yes') {
             markNumberOnBoard(ball);
         }
     }
 
-    // Función que genera un número basado en el tipo de generador seleccionado al crear la sala
     function generateRandomNumber(generatorType) {
         let number;
         switch (generatorType) {
-            case '1': // Generador básico
+            case '1':
                 number = Math.floor(Math.random() * 75) + 1;
                 break;
-            case '2': // Generador con cálculo diferente
+            case '2':
                 number = (Math.floor(Math.random() * 75) + 1) * 2 % 75;
                 break;
-            case '3': // Otro tipo de lógica
+            case '3':
                 number = Math.ceil(Math.random() * 75);
                 break;
             default:
@@ -306,17 +281,15 @@
         return number;
     }
 
-    // Función para marcar un número en el tablero de Bingo automáticamente
     function markNumberOnBoard(number) {
         const cells = document.querySelectorAll('.bingo-cell');
         cells.forEach(cell => {
             if (parseInt(cell.textContent) === number) {
                 cell.classList.add('marked');
+                saveMarkedNumber(number);
             }
         });
     }
 
-    // Generar el tablero de Bingo cuando la página carga
     window.onload = generateBingoBoard;
 </script>
-

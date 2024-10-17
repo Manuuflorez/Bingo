@@ -18,8 +18,8 @@ namespace Bingoo.Controllers
 
         public IActionResult Index()
         {
-            // Obtener todas las salas activas (con al menos 1 jugador)
-            var activeRooms = _context.Rooms.Where(r => r.ActivePlayers > 0).ToList();
+            // Obtener todas las salas activas (con al menos 1 jugador y que no han comenzado)
+            var activeRooms = _context.Rooms.Where(r => r.ActivePlayers > 0 && !r.GameStarted).ToList();
             return View(activeRooms);
         }
 
@@ -41,9 +41,10 @@ namespace Bingoo.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Establecer la fecha de creación y el dueño de la sala
+                // Establecer la fecha de creación, el dueño de la sala y el estado inicial del juego
                 room.CreatedAt = DateTime.Now;
-                room.Owner = User?.Identity?.Name ?? "Anónimo";  // Nombre del usuario o Anónimo si no tiene nombre
+                room.Owner = User?.Identity?.Name ?? "Anónimo";
+                room.GameStarted = false;  // El juego no ha comenzado inicialmente
 
                 // Guardar la sala en la base de datos
                 _context.Rooms.Add(room);
@@ -91,6 +92,12 @@ namespace Bingoo.Controllers
                 return NotFound();
             }
 
+            // No permitir que nuevos jugadores se unan si el juego ya comenzó
+            if (room.GameStarted)
+            {
+                return RedirectToAction("Index");
+            }
+
             // Incrementar el número de jugadores activos
             room.ActivePlayers++;
             _context.SaveChanges();
@@ -109,7 +116,7 @@ namespace Bingoo.Controllers
                 return NotFound();  // Devolver 404 si la sala no se encuentra
             }
 
-            // Lógica para decrementar los jugadores activos o eliminar la sala
+            // Decrementar los jugadores activos
             room.ActivePlayers--;
 
             // Si no hay jugadores activos, eliminar la sala
@@ -123,6 +130,20 @@ namespace Bingoo.Controllers
             return RedirectToAction("Index");  // Redirigir al inicio después de dejar la sala
         }
 
+        [HttpPost]
+        public IActionResult StartGame(int id)
+        {
+            var room = _context.Rooms.FirstOrDefault(r => r.Id == id);
+            if (room == null)
+            {
+                return NotFound();
+            }
 
+            // Marcar la sala como que el juego ha comenzado
+            room.GameStarted = true;
+            _context.SaveChanges();
+
+            return RedirectToAction("PlayGame", new { id = room.Id });
+        }
     }
 }
