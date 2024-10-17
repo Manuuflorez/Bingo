@@ -1,42 +1,48 @@
 using Microsoft.AspNetCore.SignalR;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Bingoo.Models;
 
 public class BingoHub : Hub
 {
-    // Diccionario para llevar un registro de los usuarios conectados por sala
+    private readonly BingoContext _context;
     private static Dictionary<string, List<string>> rooms = new Dictionary<string, List<string>>();
 
-    // Método que se llama cuando un usuario se une a una sala
-    public async Task JoinRoom(string roomId, string userName)
+    // Constructor que inyecta el contexto de la base de datos
+    public BingoHub(BingoContext context)
     {
-        // Añadir el usuario a la sala
-        if (!rooms.ContainsKey(roomId))
-        {
-            rooms[roomId] = new List<string>();
-        }
-
-        rooms[roomId].Add(userName);
-
-        // Notificar a todos los usuarios en la sala que un nuevo usuario se ha unido
-        await Clients.Group(roomId).SendAsync("UserJoined", userName);
-
-        // Unir al grupo de SignalR para la sala
-        await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
-
-        // Actualizar la lista de usuarios conectados para todos los usuarios en la sala
-        await Clients.Group(roomId).SendAsync("UpdateUserList", rooms[roomId]);
+        _context = context;
     }
 
-    // Método que se llama cuando un usuario deja la sala
+   public async Task JoinRoom(string roomId, string userName)
+{
+    if (!rooms.ContainsKey(roomId))
+    {
+        rooms[roomId] = new List<string>();
+    }
+
+    var room = rooms[roomId];
+
+    // Permitir que los jugadores que ya estuvieron en la sala vuelvan a unirse
+    if (!room.Contains(userName))
+    {
+        room.Add(userName);
+    }
+
+    // Unir al grupo de SignalR para la sala
+    await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
+
+    // Notificar a todos los usuarios en la sala que un nuevo usuario se ha unido
+    await Clients.Group(roomId).SendAsync("UserJoined", userName);
+    await Clients.Group(roomId).SendAsync("UpdateUserList", room);
+}
+
+
     public async Task LeaveRoom(string roomId, string userName)
     {
         if (rooms.ContainsKey(roomId))
         {
             rooms[roomId].Remove(userName);
-
-            // Notificar a todos los usuarios en la sala que un usuario se ha ido
-            await Clients.Group(roomId).SendAsync("UserLeft", userName);
 
             // Actualizar la lista de usuarios conectados
             await Clients.Group(roomId).SendAsync("UpdateUserList", rooms[roomId]);
@@ -52,7 +58,6 @@ public class BingoHub : Hub
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomId);
     }
 
-    // Método que se llama cuando el usuario se desconecta
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         foreach (var room in rooms)
@@ -66,5 +71,4 @@ public class BingoHub : Hub
 
         await base.OnDisconnectedAsync(exception);
     }
-
 }

@@ -15,6 +15,14 @@
     <!-- Mostrar las salas activas -->
     <h3>Salas Activas</h3>
 
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+
     @if (Model != null && Model.Any())
     {
         <table class="table table-striped">
@@ -23,18 +31,45 @@
                     <th>Propietario</th>
                     <th>Jugadores Activos</th>
                     <th>Capacidad</th>
+                    <th>Estado</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var room in Model)
                 {
+                    bool isPlayerInRoom = room.Players.Contains(userName) || room.PreviousPlayers.Contains(userName);
+
                     <tr>
                         <td>@room.Owner</td>
                         <td>@room.ActivePlayers</td>
                         <td>@room.MaxPlayers</td>
                         <td>
-                            <a class="btn btn-primary" asp-action="PlayGame" asp-route-id="@room.Id">Unirse</a>
+                            @if (room.GameStarted)
+                            {
+                                if (isPlayerInRoom)
+                                {
+                                    <span class="badge bg-success">En progreso (Puedes unirte)</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">En progreso (No puedes unirte)</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="badge bg-info">Esperando jugadores</span>
+                            }
+                        </td>
+                        <td>
+                            @if (!room.GameStarted || isPlayerInRoom)
+                            {
+                                <a class="btn btn-primary" asp-action="PlayGame" asp-route-id="@room.Id">Unirse</a>
+                            }
+                            else
+                            {
+                                <button class="btn btn-secondary" disabled>No disponible</button>
+                            }
                         </td>
                     </tr>
                 }

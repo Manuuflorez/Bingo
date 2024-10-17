@@ -18,5 +18,7 @@ namespace Bingoo.Models
         public string AutoMarking { get; set; } = string.Empty;
         public int ActivePlayers { get; set; }
         public bool GameStarted { get; set; }
+        public List<string> Players { get; set; } = new List<string>();
+        public List<string> PreviousPlayers { get; set; } = new List<string>();
     }
 }

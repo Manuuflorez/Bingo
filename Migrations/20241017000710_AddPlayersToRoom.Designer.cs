@@ -4,6 +4,7 @@ using Bingoo.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Bingoo.Migrations
 {
     [DbContext(typeof(BingoContext))]
-    partial class BingoContextModelSnapshot : ModelSnapshot
+    [Migration("20241017000710_AddPlayersToRoom")]
+    partial class AddPlayersToRoom
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -92,10 +95,6 @@ namespace Bingoo.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("Players")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("PreviousPlayers")
                         .IsRequired()
                         .HasColumnType("longtext");
 

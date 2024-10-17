@@ -33,6 +33,21 @@
         <p id="current-ball">Balota actual: -</p>
     </div>
 
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+   @if (User?.Identity?.Name == Model.Owner && !Model.GameStarted)
+{
+        <form asp-action="StartGame" method="post">
+            <input type="hidden" name="id" value="@Model.Id" />
+            <button type="submit" class="btn btn-success">Iniciar Juego</button>
+        </form>
+    }
+
     <!-- Botón de Pausa/Reanudar y Sacar balotas dependiendo del tipo de lanzamiento -->
     @if (Model.MarkingType == "automatic")
     {
@@ -116,16 +131,16 @@
         .build();
 
     const roomId = "@Model.Id";
-    const userName = "@(User.Identity?.Name ?? "Invitado")";
+    const userName = '@(User.Identity?.Name ?? "Invitado")';
 
     // Conectar al hub cuando la página esté lista
-    connection.start().then(function() {
+    connection.start().then(function () {
         // Unirse a la sala
         connection.invoke("JoinRoom", roomId, userName);
     });
 
     // Manejar la actualización de la lista de jugadores activos cuando cambia
-    connection.on("UpdateUserList", function(activePlayers) {
+    connection.on("UpdateUserList", function (activePlayers) {
         document.getElementById('activePlayers').textContent = activePlayers.length;
     });
 
