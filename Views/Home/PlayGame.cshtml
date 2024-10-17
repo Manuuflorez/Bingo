@@ -131,7 +131,7 @@
         .build();
 
     const roomId = "@Model.Id";
-    const userName = '@(User.Identity?.Name ?? "Invitado")';
+    const userName = '@(User?.Identity?.Name ?? "Invitado")';
 
     // Conectar al hub cuando la página esté lista
     connection.start().then(function () {
@@ -141,12 +141,16 @@
 
     // Manejar la actualización de la lista de jugadores activos cuando cambia
     connection.on("UpdateUserList", function (activePlayers) {
-        document.getElementById('activePlayers').textContent = activePlayers.length;
+        if (activePlayers && activePlayers.length !== undefined) {
+            document.getElementById('activePlayers').textContent = activePlayers.length;
+        }
     });
 
     // Salir de la sala cuando se cierre la página
     window.addEventListener("beforeunload", function () {
-        connection.invoke("LeaveRoom", roomId, userName);
+        if (roomId && userName) {
+            connection.invoke("LeaveRoom", roomId, userName);
+        }
     });
 
     // Generar el tablero de Bingo con números aleatorios
@@ -308,3 +312,4 @@
 
     window.onload = generateBingoBoard;
 </script>
+

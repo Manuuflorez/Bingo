@@ -26,8 +26,8 @@ namespace Bingoo.Controllers
                 .AsEnumerable()  // Esto fuerza a EF Core a traer los datos antes de filtrar en memoria
                 .Where(r => r.ActivePlayers > 0
                             || r.GameStarted
-                            || r.Players.Contains(currentUserName)
-                            || r.PreviousPlayers.Contains(currentUserName))
+                            || (r.Players != null && currentUserName != null && r.Players.Contains(currentUserName))
+                            || (r.PreviousPlayers != null && currentUserName != null && r.PreviousPlayers.Contains(currentUserName)))
                 .ToList();
 
             return View(rooms);
@@ -58,7 +58,14 @@ namespace Bingoo.Controllers
                 return NotFound();
             }
 
-            var currentUserName = User.Identity.Name;
+            var currentUserName = User.Identity?.Name;
+
+            // Verificar si el nombre de usuario no es nulo antes de proceder
+            if (currentUserName == null)
+            {
+                // Redirigir o mostrar un mensaje de error, según sea necesario
+                return RedirectToAction("Index");  // O manejarlo de otra manera adecuada
+            }
 
             // Verificar si el usuario ya está en la lista de jugadores o en la lista de jugadores previos
             if (!room.Players.Contains(currentUserName) && (room.GameStarted && room.PreviousPlayers.Contains(currentUserName)))
@@ -76,6 +83,7 @@ namespace Bingoo.Controllers
 
             return View(room);
         }
+
 
 
         [HttpPost]
@@ -136,7 +144,14 @@ namespace Bingoo.Controllers
                 return NotFound();  // Devolver 404 si la sala no se encuentra
             }
 
-            var currentUserName = User.Identity.Name;
+            var currentUserName = User.Identity?.Name;
+
+            // Verificar si el nombre de usuario no es nulo antes de proceder
+            if (currentUserName == null)
+            {
+                // Redirigir o mostrar un mensaje de error, según sea necesario
+                return RedirectToAction("Index");  // O manejarlo de otra manera adecuada
+            }
 
             // Verificar si el usuario está en la lista de jugadores actuales
             if (room.Players.Contains(currentUserName))
@@ -166,6 +181,7 @@ namespace Bingoo.Controllers
             _context.SaveChanges();
             return RedirectToAction("Index");  // Redirigir al inicio después de dejar la sala
         }
+
 
 
         [HttpPost]
