@@ -161,6 +161,12 @@
         }
     });
 
+    connection.on("ReceiveBall", function (ballNumber) {
+        document.getElementById('current-ball').textContent = "Balota actual: " + ballNumber;
+        markNumberOnBoard(ballNumber);
+        checkWinCondition();
+    });
+
     window.addEventListener("beforeunload", function () {
         if (roomId && userName) {
             connection.invoke("LeaveRoom", roomId, userName);
@@ -289,11 +295,7 @@
 
     function drawBall(generatorType) {
         const ball = generateRandomNumber(generatorType);
-        document.getElementById('current-ball').textContent = "Balota actual: " + ball;
-        if (autoMarking === 'yes') {
-            markNumberOnBoard(ball);
-            checkWinCondition();
-        }
+        connection.invoke("BroadcastBall", roomId, ball);
     }
 
     function generateRandomNumber(generatorType) {
@@ -382,6 +384,3 @@
 
     window.onload = generateBingoBoard;
 </script>
-
-
-
