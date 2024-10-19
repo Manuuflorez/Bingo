@@ -41,23 +41,25 @@ public class BingoHub : Hub
         await Clients.Group(roomId).SendAsync("ReceiveBall", ballNumber);
     }
 
+    public async Task AnnounceWinner(string roomId, string winnerName)
+    {
+        // Notificar a todos los jugadores de la sala quién ha ganado
+        await Clients.Group(roomId).SendAsync("GameWon", winnerName);
+    }
+
     public async Task LeaveRoom(string roomId, string userName)
     {
         if (rooms.ContainsKey(roomId))
         {
             rooms[roomId].Remove(userName);
-
-            // Actualizar la lista de usuarios conectados
             await Clients.Group(roomId).SendAsync("UpdateUserList", rooms[roomId]);
 
-            // Si no quedan usuarios, eliminar la sala
             if (rooms[roomId].Count == 0)
             {
                 rooms.Remove(roomId);
             }
         }
 
-        // Salir del grupo de SignalR para la sala
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomId);
     }
 
