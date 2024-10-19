@@ -1,89 +1,106 @@
 @model Bingoo.Models.Room
+<div class="header-container">
+    <div class="info-section">
+        <h2>Dueño de la Sala: @Model.Owner</h2>
+        <h3>Jugadores Activos: <span id="activePlayers">@Model.ActivePlayers</span></h3>
+        <p id="ball-count">Balotas sorteadas: 0</p>
 
-<h2>Dueño de la Sala: @Model.Owner</h2>
-
-<h3>Jugadores Activos: <span id="activePlayers">@Model.ActivePlayers</span></h3>
-
-<div id="game-board">
-    <p id="ball-count">Balotas sorteadas: 0</p>
-    <form asp-action="LeaveGame" method="post">
-        <input type="hidden" name="id" value="@Model.Id" />
-        <button type="submit" class="btn btn-danger">Salir de la Sala</button>
-    </form>
-
-    <!-- Tablero de Bingo -->
-    <div id="bingo-board" class="board">
-        <table id="bingo-table" class="bingo-table">
-            <thead>
-                <tr>
-                    <th>B</th>
-                    <th>I</th>
-                    <th>N</th>
-                    <th>G</th>
-                    <th>O</th>
-                </tr>
-            </thead>
-            <tbody id="bingo-body">
-                <!-- Filas del tablero de Bingo -->
-            </tbody>
-        </table>
-    </div>
-
-    <div id="ball-drawer">
-        <p id="current-ball">Balota actual: </p>
-    </div>
-        <audio id="victory-sound" preload="auto">
-            <source src="~/sounds/victory-sound.mp3" type="audio/mpeg">
-            Tu navegador no soporta la reproducción de audio.
-        </audio>
-
-        <audio id="defeat-sound" preload="auto">
-            <source src="~/sounds/defeat-sound.mp3" type="audio/mpeg">
-            Tu navegador no soporta la reproducción de audio.
-        </audio>
-
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger">
-            @TempData["ErrorMessage"]
+        <!-- Contenedor de los botones de Iniciar Juego y Salir de la Sala -->
+        <div class="button-container">
+            @if (User?.Identity?.Name == Model.Owner && !Model.GameStarted)
+            {
+                <form asp-action="StartGame" method="post" style="margin-right: 10px;">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="btn btn-success">Iniciar Juego</button>
+                </form>
+            }
+            <form asp-action="LeaveGame" method="post">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <button type="submit" class="btn btn-danger">Salir de la Sala</button>
+            </form>
         </div>
-    }
-
-   @if (User?.Identity?.Name == Model.Owner && !Model.GameStarted)
-{
-        <form asp-action="StartGame" method="post">
-            <input type="hidden" name="id" value="@Model.Id" />
-            <button type="submit" class="btn btn-success">Iniciar Juego</button>
-        </form>
-    }
-
-    <!-- Botón de Pausa/Reanudar y Sacar balotas dependiendo del tipo de lanzamiento -->
-    @if (Model.MarkingType == "automatic")
-    {
-    <p>El juego se iniciará automáticamente con la velocidad seleccionada.</p>
-    <button class="btn btn-success" id="start-game-btn"  @if (User?.Identity?.Name != Model.Owner || !Model.GameStarted)
-    {<text>disabled</text>}>Sacar balotas</button>
-    <button class="btn btn-warning" id="pause-game-btn" style="display:none;">Pausar</button>
-    }
-
-    @if (Model.MarkingType == "manual")
-    {
-    <div>
-    <p>Saca las balotas manualmente haciendo clic en el botón a continuación.</p>
-    <button class="btn btn-primary" id="draw-ball-btn" 
-    @if (User?.Identity?.Name != Model.Owner || !Model.GameStarted)
-    {<text>disabled</text>}>Sacar una Balota</button>
     </div>
-    }
-<!-- Cuadro flotante que muestra que el juego está pausado -->
-<div id="pause-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0, 0, 0, 0.8); z-index: 999;">
-    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 20px 40px; border-radius: 10px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);">
-        <p style="font-size: 24px; color: #333; text-align: center;">El juego está pausado.</p>
-        <p style="font-size: 18px; color: #555; text-align: center;">Esperando que el dueño de la sala lo reanude...</p>
+
+    <!-- Sección de la balota actual y el botón, alineados a la derecha y organizados verticalmente -->
+    <div id="ball-drawer">
+        <p>Balota actual:</p>
+        <div id="current-ball" class="ball">0</div>
+
+        @if (Model.MarkingType == "automatic")
+{
+    <button class="btn btn-success" id="start-game-btn" 
+            style="@(User?.Identity?.Name != Model.Owner || !Model.GameStarted ? "display:none;" : "")">
+        Sacar balotas
+    </button>
+    
+    <button class="btn btn-warning" id="pause-game-btn" style="display:none;">Pausar</button>
+}
+
+@if (Model.MarkingType == "manual")
+{
+    <div>
+        <button class="btn btn-primary" id="draw-ball-btn" 
+                style="@(User?.Identity?.Name != Model.Owner || !Model.GameStarted ? "display:none;" : "")">
+            Sacar una Balota
+        </button>
+    </div>
+}
+
     </div>
 </div>
 
-    <!-- Modal de Victoria -->
+
+<!-- Tablero de Bingo -->
+<div id="bingo-board" class="board">
+    <table id="bingo-table" class="bingo-table">
+        <thead>
+            <tr>
+                <th>B</th>
+                <th>I</th>
+                <th>N</th>
+                <th>G</th>
+                <th>O</th>
+            </tr>
+        </thead>
+        <tbody id="bingo-body">
+            <!-- Filas del tablero de Bingo -->
+        </tbody>
+    </table>
+</div>
+
+<audio id="victory-sound" preload="auto">
+    <source src="~/sounds/victory-sound.mp3" type="audio/mpeg">
+    Tu navegador no soporta la reproducción de audio.
+</audio>
+
+<audio id="defeat-sound" preload="auto">
+    <source src="~/sounds/defeat-sound.mp3" type="audio/mpeg">
+    Tu navegador no soporta la reproducción de audio.
+</audio>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+
+
+<!-- Botón de Pausa/Reanudar y Sacar balotas dependiendo del tipo de lanzamiento -->
+
+<!-- Cuadro flotante que muestra que el juego está pausado -->
+<div id="pause-overlay"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0, 0, 0, 0.8); z-index: 999;">
+    <div
+        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 20px 40px; border-radius: 10px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);">
+        <p style="font-size: 24px; color: #333; text-align: center;">El juego está pausado.</p>
+        <p style="font-size: 18px; color: #555; text-align: center;">Esperando que el dueño de la sala lo reanude...
+        </p>
+    </div>
+</div>
+
+<!-- Modal de Victoria -->
 <div class="modal fade" id="victoryModal" tabindex="-1" aria-labelledby="victoryModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -95,7 +112,7 @@
                 <p id="victoryMessage">Has ganado el juego.</p>
             </div>
             <div class="modal-footer">
-                 <form asp-action="LeaveGame" method="post">
+                <form asp-action="LeaveGame" method="post">
                     <input type="hidden" name="id" value="@Model.Id" />
                     <button type="submit" class="btn btn-danger">Cerrar</button>
                 </form>
@@ -111,6 +128,98 @@
         font-family: 'Comic Sans MS', cursive, sans-serif;
         background-color: #f0f4f7;
         color: #333;
+    }
+
+    .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        /* Alinea los elementos en la parte superior */
+        padding: 10px 20px;
+    }
+
+    .info-section {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .button-container {
+        display: flex;
+        gap: 10px;
+        /* Añade un espacio entre los botones */
+        margin-top: 10px;
+    }
+
+    .button-container form {
+        margin-right: 10px;
+        /* Añadir espacio entre los botones */
+    }
+
+    .ball {
+        margin-bottom: 10px;
+        /* Añade espacio debajo de la balota para el botón */
+    }
+
+    #ball-drawer {
+        display: flex;
+        flex-direction: column;
+        /* Alinea la balota y los botones verticalmente */
+        align-items: center;
+    }
+
+    /* Ajuste del texto y la balota */
+    #ball-drawer p {
+        margin: 0;
+        font-size: 16px;
+        text-align: center;
+    }
+
+    /* Estilo para la bola */
+    .ball {
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 30% 30%, #ffffff 10%, #00cc44 50%, #008800 100%);
+        display: flex;
+        justify-content: center;
+        /* Centramos el contenido horizontalmente */
+        align-items: center;
+        /* Centramos el contenido verticalmente */
+        font-size: 40px;
+        font-weight: bold;
+        color: black;
+        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5), 0 8px 15px rgba(0, 0, 0, 0.6);
+        margin-top: 15px;
+        position: relative;
+        text-align: center;
+    }
+
+    /* Borde circular */
+    .ball::before {
+        content: "";
+        position: absolute;
+        top: 12%;
+        left: 12%;
+        width: 80%;
+        height: 80%;
+        border-radius: 50%;
+        border: 5px solid white;
+    }
+
+    /* Estilo del número */
+    .ball span {
+        position: absolute;
+        /* Cambiar la posición a absoluta */
+        top: 50%;
+        /* Ajusta manualmente la posición vertical */
+        left: 50%;
+        /* Ajusta manualmente la posición horizontal */
+        transform: translate(-50%, -50%);
+        /* Centra el contenido basado en la posición */
+        font-size: 45px;
+        /* Puedes ajustar el tamaño del texto aquí */
+        color: white;
+        /* Color del texto */
     }
 
     .bingo-table {
@@ -169,20 +278,32 @@
     #current-ball {
         background-color: #ff4e50;
         color: #fff;
-        padding: 10px 15px;
+        padding: 15px 15px;
         border-radius: 50px;
-        font-size: 28px;
+        font-size: 45px;
         font-weight: bold;
-        display: inline-block;
-        margin-top: 15px;
     }
 
     /* Colores para las cabeceras de cada columna */
-    th:nth-child(1) { background-color: #f39c12; }
-    th:nth-child(2) { background-color: #e74c3c; }
-    th:nth-child(3) { background-color: #9b59b6; }
-    th:nth-child(4) { background-color: #3498db; }
-    th:nth-child(5) { background-color: #1abc9c; }
+    th:nth-child(1) {
+        background-color: #f39c12;
+    }
+
+    th:nth-child(2) {
+        background-color: #e74c3c;
+    }
+
+    th:nth-child(3) {
+        background-color: #9b59b6;
+    }
+
+    th:nth-child(4) {
+        background-color: #3498db;
+    }
+
+    th:nth-child(5) {
+        background-color: #1abc9c;
+    }
 
     .btn-primary {
         background-color: #ffcc00;
@@ -251,16 +372,24 @@
         background-color: #ffcc00;
     }
 
-     #current-ball {
+    #current-ball {
         margin-top: 20px;
         font-size: 24px;
         font-weight: bold;
     }
 
     @@keyframes glowing {
-        0% { box-shadow: 0 0 5px rgba(255, 0, 0, 0.5); }
-        50% { box-shadow: 0 0 20px rgba(255, 0, 0, 1); }
-        100% { box-shadow: 0 0 5px rgba(255, 0, 0, 0.5); }
+        0% {
+            box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+        }
+
+        50% {
+            box-shadow: 0 0 20px rgba(255, 0, 0, 1);
+        }
+
+        100% {
+            box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+        }
     }
 </style>
 
@@ -270,7 +399,7 @@
     let gameInterval;
     let isPaused = false;
     let ballCount = 0;
-    let drawnBalls = []; 
+    let drawnBalls = [];
     const autoMarking = '@Model.AutoMarking';
     const gameRules = '@Model.GameRules';
 
@@ -291,14 +420,32 @@
         }
     });
 
+    function getRandomColor() {
+        const letters = '0123456789ABCDEF';
+        let color = '#';
+        for (let i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+    }
+
     connection.on("ReceiveBall", function (ballNumber) {
-        document.getElementById('current-ball').textContent = "Balota actual: " + ballNumber;
+        // Actualizar el número de la balota dentro de la bola
+        const ballElement = document.getElementById('current-ball');
+        ballElement.textContent = ballNumber;
+
+        // Cambiar el color de fondo de la bola
+        const newColor = getRandomColor();
+        ballElement.style.background = `radial-gradient(circle at 30% 30%, #ffffff 10%, ${newColor} 50%, ${newColor} 100%)`;
+
+        // Marcar el número en el tablero
         markNumberOnBoard(ballNumber);
 
-        // Incrementamos el contador de balotas y actualizamos la interfaz
+        // Incrementamos el contador de balotas
         ballCount++;
         document.getElementById('ball-count').textContent = "Balotas sorteadas: " + ballCount;
 
+        // Verificar condición de victoria
         checkWinCondition();
 
         // Verificar si se han sorteado todas las balotas
@@ -438,40 +585,40 @@
         });
 
         document.getElementById('pause-game-btn').addEventListener('click', function () {
-    if (!isPaused) {
-        clearInterval(gameInterval);
-        isPaused = true;
-        this.textContent = 'Reanudar';
-        connection.invoke("PauseGame", roomId);  // Notificar a los invitados que el juego está pausado
-    } else {
-        const generatorType = '@Model.GeneratorType';
-        const speed = @Model.Speed * 1000;
-        gameInterval = setInterval(function () {
-            drawBall(generatorType);
-        }, speed);
-        isPaused = false;
-        this.textContent = 'Pausar';
-        connection.invoke("ResumeGame", roomId);  // Notificar a los invitados que el juego se ha reanudado
-    }
-});
+            if (!isPaused) {
+                clearInterval(gameInterval);
+                isPaused = true;
+                this.textContent = 'Reanudar';
+                connection.invoke("PauseGame", roomId);  // Notificar a los invitados que el juego está pausado
+            } else {
+                const generatorType = '@Model.GeneratorType';
+                const speed = @Model.Speed * 1000;
+                gameInterval = setInterval(function () {
+                    drawBall(generatorType);
+                }, speed);
+                isPaused = false;
+                this.textContent = 'Pausar';
+                connection.invoke("ResumeGame", roomId);  // Notificar a los invitados que el juego se ha reanudado
+            }
+        });
 
-connection.on("PauseGame", function () {
-    const currentUserName = '@(User?.Identity?.Name ?? "Invitado")'; // Nombre del jugador actual
-    const ownerName = '@Model.Owner'; // Nombre del dueño de la sala
+        connection.on("PauseGame", function () {
+            const currentUserName = '@(User?.Identity?.Name ?? "Invitado")'; // Nombre del jugador actual
+            const ownerName = '@Model.Owner'; // Nombre del dueño de la sala
 
-    if (currentUserName !== ownerName) { // Mostrar el cuadro solo a los invitados
-        document.getElementById('pause-overlay').style.display = 'block';
-    }
-});
+            if (currentUserName !== ownerName) { // Mostrar el cuadro solo a los invitados
+                document.getElementById('pause-overlay').style.display = 'block';
+            }
+        });
 
-connection.on("ResumeGame", function () {
-    const currentUserName = '@(User?.Identity?.Name ?? "Invitado")'; // Nombre del jugador actual
-    const ownerName = '@Model.Owner'; // Nombre del dueño de la sala
+        connection.on("ResumeGame", function () {
+            const currentUserName = '@(User?.Identity?.Name ?? "Invitado")'; // Nombre del jugador actual
+            const ownerName = '@Model.Owner'; // Nombre del dueño de la sala
 
-    if (currentUserName !== ownerName) { // Ocultar el cuadro solo para los invitados
-        document.getElementById('pause-overlay').style.display = 'none';
-    }
-});
+            if (currentUserName !== ownerName) { // Ocultar el cuadro solo para los invitados
+                document.getElementById('pause-overlay').style.display = 'none';
+            }
+        });
 
     }
 
@@ -504,32 +651,32 @@ connection.on("ResumeGame", function () {
     }
 
     function generateRandomNumber(generatorType) {
-    let number;
-    do {
-        switch (generatorType) {
-            // Método 1: Cuadrados medios
-            case '1':
-                number = middleSquareMethod();
-                break;
-            // Método 2: Congruencia lineal
-            case '2':
-                number = linearCongruentialGenerator();
-                break;
-            // Método 3: Fibonacci modificado
-            case '3':
-                number = modifiedFibonacci();
-                break;
-            default:
-                number = middleSquareMethod(); // Por defecto, usar método de cuadrados medios
-                break;
-        }
-    } while (drawnBalls.includes(number)); // Verificar si el número ya fue sorteado
+        let number;
+        do {
+            switch (generatorType) {
+                // Método 1: Cuadrados medios
+                case '1':
+                    number = middleSquareMethod();
+                    break;
+                // Método 2: Congruencia lineal
+                case '2':
+                    number = linearCongruentialGenerator();
+                    break;
+                // Método 3: Fibonacci modificado
+                case '3':
+                    number = modifiedFibonacci();
+                    break;
+                default:
+                    number = middleSquareMethod(); // Por defecto, usar método de cuadrados medios
+                    break;
+            }
+        } while (drawnBalls.includes(number)); // Verificar si el número ya fue sorteado
 
-    // Añadir el número generado a la lista de balotas sorteadas
-    drawnBalls.push(number);
+        // Añadir el número generado a la lista de balotas sorteadas
+        drawnBalls.push(number);
 
-    return number;
-}
+        return number;
+    }
 
     // Método de los Cuadrados Medios
     function middleSquareMethod() {

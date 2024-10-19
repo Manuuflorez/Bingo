@@ -76,11 +76,42 @@
     }
 
     /* Colores para las cabeceras de cada columna */
-    th:nth-child(1) { background-color: #f39c12; }
-    th:nth-child(2) { background-color: #e74c3c; }
-    th:nth-child(3) { background-color: #9b59b6; }
-    th:nth-child(4) { background-color: #3498db; }
-    th:nth-child(5) { background-color: #1abc9c; }
+th:nth-child(1) {
+    background-color: #f39c12; /* Naranja */
+}
+
+th:nth-child(2) {
+    background-color: #e74c3c; /* Rojo */
+}
+
+th:nth-child(3) {
+    background-color: #9b59b6; /* Morado */
+}
+
+th:nth-child(4) {
+    background-color: #3498db; /* Azul */
+}
+
+th:nth-child(5) {
+    background-color: #1abc9c; /* Verde */
+}
+
+th:nth-child(6) {
+    background-color: #f1c40f; /* Amarillo brillante */
+}
+
+th:nth-child(7) {
+    background-color: #9b59b6; /* Naranja suave */
+}
+
+th:nth-child(8) {
+    background-color: #3498db; /* Rojo oscuro */
+}
+
+th:nth-child(9) {
+    background-color: #f39c12; /* Verde azulado */
+}
+
 
     .btn-primary {
         background-color: #ffcc00;
@@ -156,9 +187,17 @@
     }
 
     @@keyframes glowing {
-        0% { box-shadow: 0 0 5px rgba(255, 0, 0, 0.5); }
-        50% { box-shadow: 0 0 20px rgba(255, 0, 0, 1); }
-        100% { box-shadow: 0 0 5px rgba(255, 0, 0, 0.5); }
+        0% {
+            box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+        }
+
+        50% {
+            box-shadow: 0 0 20px rgba(255, 0, 0, 1);
+        }
+
+        100% {
+            box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+        }
     }
 </style>
 
@@ -188,7 +227,11 @@
                 <tr>
                     <th>Propietario</th>
                     <th>Jugadores Activos</th>
+                    <th>Generador</th>
+                    <th>Tipo de lanzamiento</th>
+                    <th>¿Marcar balotas automáticamente?</th>
                     <th>Capacidad</th>
+                    <th>Reglas del juego</th>
                     <th>Estado</th>
                     <th>Acciones</th>
                 </tr>
@@ -201,7 +244,56 @@
                     <tr>
                         <td>@room.Owner</td>
                         <td>@room.ActivePlayers</td>
+                        <td>
+                            @if (room.GeneratorType == "1")
+                            {
+                                <span>Cuadrados medios</span>
+                            }
+                            else if (room.GeneratorType == "2")
+                            {
+                                <span>Congruencia lineal</span>
+                            }
+                            else if (room.GeneratorType == "3")
+                            {
+                                <span>Fibonacci</span>
+                            }
+                        </td>
+                        <td>
+                            @if (room.MarkingType == "manual")
+                            {
+                                <span>Manual</span>
+                            }
+                            else if (room.MarkingType == "automatic")
+                            {
+                                <span>Automática</span>
+                            }
+                        </td>
+                        <td>
+                            @if (room.AutoMarking == "yes")
+                            {
+                                <span>Sí</span>
+                            }
+                            else if (room.AutoMarking == "no")
+                            {
+                                <span>No</span>
+                            }
+                        </td>
+
                         <td>@room.MaxPlayers</td>
+                        <td>
+                            @if (room.GameRules == "linea")
+                            {
+                                <span>Llenar una línea</span>
+                            }
+                            else if (room.GameRules == "carton")
+                            {
+                                <span>Llenar el cartón completo</span>
+                            }
+                            else if (room.GameRules == "cuatroEsquinas")
+                            {
+                                <span>Cuatro esquinas</span>
+                            }
+                        </td>
                         <td>
                             @if (room.GameStarted)
                             {
@@ -271,7 +363,8 @@
                         <!-- Velocidad del lanzamiento de balotas (oculta si el lanzamiento no es automático) -->
                         <div class="mb-3" id="speedField" style="display:none;">
                             <label for="speed" class="form-label">Velocidad del lanzamiento de balotas (en segundos)</label>
-                            <input type="number" class="form-control" id="speed" name="speed" min="1" max="60" placeholder="Segundos" value="5" />
+                            <input type="number" class="form-control" id="speed" name="speed" min="1" max="60"
+                                placeholder="Segundos" value="5" />
                         </div>
 
                         <!-- Opción para elegir si las balotas se marcan automáticamente o manualmente -->
@@ -286,7 +379,8 @@
                         <!-- Número máximo de jugadores -->
                         <div class="mb-3">
                             <label for="maxPlayers" class="form-label">Número máximo de jugadores</label>
-                            <input type="number" class="form-control" id="maxPlayers" name="maxPlayers" min="1" max="10" value="10">
+                            <input type="number" class="form-control" id="maxPlayers" name="maxPlayers" min="1" max="10"
+                                value="10">
                         </div>
 
                         <!-- Reglas personalizadas -->
@@ -319,7 +413,7 @@ else
 
 <script>
     // Mostrar el campo de velocidad solo si el lanzamiento es automático
-    document.getElementById('markingType').addEventListener('change', function() {
+    document.getElementById('markingType').addEventListener('change', function () {
         var markingType = this.value;
         var speedField = document.getElementById('speedField');
 
