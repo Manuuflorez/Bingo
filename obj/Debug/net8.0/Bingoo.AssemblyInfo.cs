@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Bingoo")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bffced1048d16b20de54177eb98e5e757afb2691")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+db98eac252659a7ae39c3e857f9b0e626e710c72")]
 [assembly: System.Reflection.AssemblyProductAttribute("Bingoo")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Bingoo")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
