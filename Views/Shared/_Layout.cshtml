@@ -57,8 +57,7 @@
             <span>&copy; 2024 - Bingoo</span>
 
             <!-- Control de volumen -->
-            <div id="volume-control"
-               >
+            <div id="volume-control">
                 <label for="volume-slider" style="margin-right: 8px; font-size: 14px; font-weight: bold;">Volumen:
                 </label>
                 <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.3" style="width: 150px;">
@@ -95,10 +94,14 @@
             volumeSlider.value = savedVolume; // Actualiza el control deslizante
             audio.currentTime = parseFloat(savedTime);
 
+            // Si la música estaba pausada, mantenerla pausada, sino reproducirla
             if (!isPaused) {
                 audio.play().catch((e) => {
                     console.log("Autoplay may be blocked by the browser:", e);
                 });
+                toggleMusicButton.innerHTML = 'Pausar Música';
+            } else {
+                toggleMusicButton.innerHTML = 'Reproducir Música';
             }
 
             // Guardar el progreso del audio cada segundo
@@ -121,7 +124,7 @@
                 localStorage.setItem("bgMusicPaused", "false");
             } else {
                 audio.pause();
-                toggleMusicButton.innerHTML = 'Reanudar Música';
+                toggleMusicButton.innerHTML = 'Reproducir Música';
                 localStorage.setItem("bgMusicPaused", "true");
             }
         });

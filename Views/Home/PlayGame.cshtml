@@ -31,6 +31,15 @@
     <div id="ball-drawer">
         <p id="current-ball">Balota actual: -</p>
     </div>
+        <audio id="victory-sound" preload="auto">
+            <source src="~/sounds/victory-sound.mp3" type="audio/mpeg">
+            Tu navegador no soporta la reproducción de audio.
+        </audio>
+
+        <audio id="defeat-sound" preload="auto">
+            <source src="~/sounds/defeat-sound.mp3" type="audio/mpeg">
+            Tu navegador no soporta la reproducción de audio.
+        </audio>
 
     @if (TempData["ErrorMessage"] != null)
     {
@@ -70,7 +79,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="victoryModalLabel">¡Felicidades!</h5>
+                <h5 class="modal-title" id="victoryModalLabel">¡Juego terminado!</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -277,9 +286,21 @@
         checkWinCondition();
     });
 
-     connection.on("GameWon", function (winnerName) {
-        // Mostrar a todos los jugadores quién ganó
-        showVictoryModal(`${winnerName} ha ganado el juego!`);
+    connection.on("GameWon", function (winnerName) {
+        const victorySound = document.getElementById('victory-sound');
+        const defeatSound = document.getElementById('defeat-sound');
+        const currentUserName = '@(User?.Identity?.Name ?? "Invitado")'; // Nombre del jugador actual
+
+        // Mostrar modal de victoria para todos
+        if (currentUserName === winnerName) {
+            // Si el jugador actual es el ganador, mostrar el mensaje de victoria y reproducir el sonido de victoria
+            showVictoryModal(`¡Felicidades ${winnerName}, has ganado el juego!`);
+            victorySound.play();
+        } else {
+            // Si el jugador actual no es el ganador, mostrar un mensaje de derrota y reproducir el sonido de derrota
+            showVictoryModal(`El jugador ${winnerName} ha ganado. ¡Mejor suerte la próxima vez!`);
+            defeatSound.play();
+        }
 
         // Redirigir a todos los jugadores al inicio después de cerrar el modal
         const victoryModal = new bootstrap.Modal(document.getElementById('victoryModal'));
@@ -289,6 +310,8 @@
             window.location.href = '/'; // Redirigir al inicio
         });
     });
+
+
 
     window.addEventListener("beforeunload", function () {
         if (roomId && userName) {

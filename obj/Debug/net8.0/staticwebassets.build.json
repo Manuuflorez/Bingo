@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "f8GEHEdV0rg1rQo7nXJIa6yog8ItXjCfwFPVc4HYr68=",
+  "Hash": "VPsnxpVHZFSN05Oh9bN7In1YIfD0dxUBS9EkZT5QDKc=",
   "Source": "Bingoo",
   "BasePath": "_content/Bingoo",
   "Mode": "Default",
@@ -1212,6 +1212,44 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\music\\background-music.mp3"
+    },
+    {
+      "Identity": "C:\\Users\\user\\Documents\\ProyectosDesarrollo\\Bingoo\\wwwroot\\sounds\\defeat-sound.mp3",
+      "SourceId": "Bingoo",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\user\\Documents\\ProyectosDesarrollo\\Bingoo\\wwwroot\\",
+      "BasePath": "_content/Bingoo",
+      "RelativePath": "sounds/defeat-sound.mp3",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\sounds\\defeat-sound.mp3"
+    },
+    {
+      "Identity": "C:\\Users\\user\\Documents\\ProyectosDesarrollo\\Bingoo\\wwwroot\\sounds\\victory-sound.mp3",
+      "SourceId": "Bingoo",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\user\\Documents\\ProyectosDesarrollo\\Bingoo\\wwwroot\\",
+      "BasePath": "_content/Bingoo",
+      "RelativePath": "sounds/victory-sound.mp3",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\sounds\\victory-sound.mp3"
     }
   ]
 }

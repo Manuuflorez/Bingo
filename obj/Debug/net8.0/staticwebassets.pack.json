@@ -249,6 +249,14 @@
       "PackagePath": "staticwebassets\\music\\background-music.mp3"
     },
     {
+      "Id": "C:\\Users\\user\\Documents\\ProyectosDesarrollo\\Bingoo\\wwwroot\\sounds\\defeat-sound.mp3",
+      "PackagePath": "staticwebassets\\sounds\\defeat-sound.mp3"
+    },
+    {
+      "Id": "C:\\Users\\user\\Documents\\ProyectosDesarrollo\\Bingoo\\wwwroot\\sounds\\victory-sound.mp3",
+      "PackagePath": "staticwebassets\\sounds\\victory-sound.mp3"
+    },
+    {
       "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.Bingoo.Microsoft.AspNetCore.StaticWebAssets.props",
       "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
     },
