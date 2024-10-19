@@ -76,4 +76,13 @@ public class BingoHub : Hub
 
         await base.OnDisconnectedAsync(exception);
     }
+     public async Task PauseGame(string roomId)
+    {
+        await Clients.Group(roomId).SendAsync("PauseGame");
+    }
+
+    public async Task ResumeGame(string roomId)
+    {
+        await Clients.Group(roomId).SendAsync("ResumeGame");
+    }
 }

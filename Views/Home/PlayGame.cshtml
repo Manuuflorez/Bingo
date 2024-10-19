@@ -75,6 +75,14 @@
     {<text>disabled</text>}>Sacar una Balota</button>
     </div>
     }
+<!-- Cuadro flotante que muestra que el juego está pausado -->
+<div id="pause-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0, 0, 0, 0.8); z-index: 999;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 20px 40px; border-radius: 10px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);">
+        <p style="font-size: 24px; color: #333; text-align: center;">El juego está pausado.</p>
+        <p style="font-size: 18px; color: #555; text-align: center;">Esperando que el dueño de la sala lo reanude...</p>
+    </div>
+</div>
+
     <!-- Modal de Victoria -->
 <div class="modal fade" id="victoryModal" tabindex="-1" aria-labelledby="victoryModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -430,20 +438,41 @@
         });
 
         document.getElementById('pause-game-btn').addEventListener('click', function () {
-            if (!isPaused) {
-                clearInterval(gameInterval);
-                isPaused = true;
-                this.textContent = 'Reanudar';
-            } else {
-                const generatorType = '@Model.GeneratorType';
-                const speed = @Model.Speed * 1000;
-                gameInterval = setInterval(function () {
-                    drawBall(generatorType);
-                }, speed);
-                isPaused = false;
-                this.textContent = 'Pausar';
-            }
-        });
+    if (!isPaused) {
+        clearInterval(gameInterval);
+        isPaused = true;
+        this.textContent = 'Reanudar';
+        connection.invoke("PauseGame", roomId);  // Notificar a los invitados que el juego está pausado
+    } else {
+        const generatorType = '@Model.GeneratorType';
+        const speed = @Model.Speed * 1000;
+        gameInterval = setInterval(function () {
+            drawBall(generatorType);
+        }, speed);
+        isPaused = false;
+        this.textContent = 'Pausar';
+        connection.invoke("ResumeGame", roomId);  // Notificar a los invitados que el juego se ha reanudado
+    }
+});
+
+connection.on("PauseGame", function () {
+    const currentUserName = '@(User?.Identity?.Name ?? "Invitado")'; // Nombre del jugador actual
+    const ownerName = '@Model.Owner'; // Nombre del dueño de la sala
+
+    if (currentUserName !== ownerName) { // Mostrar el cuadro solo a los invitados
+        document.getElementById('pause-overlay').style.display = 'block';
+    }
+});
+
+connection.on("ResumeGame", function () {
+    const currentUserName = '@(User?.Identity?.Name ?? "Invitado")'; // Nombre del jugador actual
+    const ownerName = '@Model.Owner'; // Nombre del dueño de la sala
+
+    if (currentUserName !== ownerName) { // Ocultar el cuadro solo para los invitados
+        document.getElementById('pause-overlay').style.display = 'none';
+    }
+});
+
     }
 
     if ('@Model.MarkingType' === 'manual') {
