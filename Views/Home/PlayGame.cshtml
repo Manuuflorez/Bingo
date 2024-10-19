@@ -5,6 +5,7 @@
 <h3>Jugadores Activos: <span id="activePlayers">@Model.ActivePlayers</span></h3>
 
 <div id="game-board">
+    <p id="ball-count">Balotas sorteadas: 0</p>
     <form asp-action="LeaveGame" method="post">
         <input type="hidden" name="id" value="@Model.Id" />
         <button type="submit" class="btn btn-danger">Salir de la Sala</button>
@@ -29,7 +30,7 @@
     </div>
 
     <div id="ball-drawer">
-        <p id="current-ball">Balota actual: -</p>
+        <p id="current-ball">Balota actual: </p>
     </div>
         <audio id="victory-sound" preload="auto">
             <source src="~/sounds/victory-sound.mp3" type="audio/mpeg">
@@ -260,6 +261,7 @@
 <script>
     let gameInterval;
     let isPaused = false;
+    let ballCount = 0;
     const autoMarking = '@Model.AutoMarking';
     const gameRules = '@Model.GameRules';
 
@@ -283,6 +285,11 @@
     connection.on("ReceiveBall", function (ballNumber) {
         document.getElementById('current-ball').textContent = "Balota actual: " + ballNumber;
         markNumberOnBoard(ballNumber);
+
+        // Incrementamos el contador de balotas y actualizamos la interfaz
+        ballCount++;
+        document.getElementById('ball-count').textContent = "Balotas sorteadas: " + ballCount;
+
         checkWinCondition();
     });
 
