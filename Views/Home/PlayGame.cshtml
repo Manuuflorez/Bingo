@@ -1,11 +1,10 @@
 @model Bingoo.Models.Room
 
-<h2>Sala: @Model.Owner</h2>
+<h2>Dueño de la Sala: @Model.Owner</h2>
 
 <h3>Jugadores Activos: <span id="activePlayers">@Model.ActivePlayers</span></h3>
 
 <div id="game-board">
-    <h3>Velocidad del lanzamiento de balotas: @Model.Speed segundos</h3>
     <form asp-action="LeaveGame" method="post">
         <input type="hidden" name="id" value="@Model.Id" />
         <button type="submit" class="btn btn-danger">Salir de la Sala</button>
@@ -60,7 +59,13 @@
     {
         <div>
             <p>Saca las balotas manualmente haciendo clic en el botón a continuación.</p>
-            <button class="btn btn-primary" id="draw-ball-btn">Sacar una Balota</button>
+             <button class="btn btn-primary" id="draw-ball-btn" 
+                @if (User?.Identity?.Name != Model.Owner)
+                {
+                    <text>disabled</text>
+                }>
+            Sacar una Balota
+        </button>
         </div>
     }
     <!-- Modal de Victoria -->
@@ -317,20 +322,77 @@
     function generateRandomNumber(generatorType) {
         let number;
         switch (generatorType) {
+            // Método 1: Cuadrados medios
             case '1':
-                number = Math.floor(Math.random() * 75) + 1;
+                number = middleSquareMethod();
                 break;
+            // Método 2: Congruencia lineal
             case '2':
-                number = (Math.floor(Math.random() * 75) + 1) * 2 % 75;
+                number = linearCongruentialGenerator();
                 break;
+            // Método 3: Fibonacci modificado
             case '3':
-                number = Math.ceil(Math.random() * 75);
+                number = modifiedFibonacci();
                 break;
             default:
-                number = Math.floor(Math.random() * 75) + 1;
+                number = middleSquareMethod(); // Por defecto, usar método de cuadrados medios
                 break;
         }
         return number;
+    }
+
+    // Método de los Cuadrados Medios
+    function middleSquareMethod() {
+        let seed = new Date().getTime().toString();
+
+        // Convertir la semilla en un número entero
+        let seedNumber = parseInt(seed.slice(-4)); // Solo los últimos 4 dígitos de la semilla para evitar un número demasiado grande
+
+        // Cuadrar la semilla
+        let square = seedNumber * seedNumber;
+
+        // Convertir el cuadrado en cadena y obtener la parte media
+        let squareStr = square.toString();
+        let middleDigits = squareStr.substring(Math.floor(squareStr.length / 2) - 2, Math.floor(squareStr.length / 2) + 2);
+
+        // Convertir los dígitos medios en número
+        let nextSeed = parseInt(middleDigits);
+
+        // Asegurarse de que el número esté en el rango de 1 a 75
+        let randomNumber = (nextSeed % 75) + 1;
+
+        return randomNumber;
+    }
+
+    // Generador Congruencia Lineal mejorado
+    function linearCongruentialGenerator() {
+        let seed = parseInt(new Date().getTime().toString().slice(-4));
+
+        const a = 1664525; // Constante multiplicadora
+        const c = 1013904223; // Incremento
+        const m = 4294967296; // Este es 2^32 calculado manualmente
+
+        // Generar el siguiente número usando el método de congruencia lineal
+        let next = (a * seed + c) % m;
+
+        // Limitar el número generado al rango de 1 a 75
+        let randomNumber = (next % 75) + 1;
+
+        return randomNumber;
+    }
+
+    // Generador de Fibonacci modificado
+    function modifiedFibonacci() {
+        let seed = parseInt(new Date().getTime().toString().slice(-4));
+
+        // Inicializar los primeros dos números de la secuencia de Fibonacci
+        let previous = seed; // Primer número de la secuencia
+        let current = (seed * 2) % 75 + 1; // Segundo número de la secuencia, limitado a 1-75
+
+        // Generar el siguiente número de Fibonacci modificado, limitado al rango de 1 a 75
+        let next = (previous + current) % 75 + 1;
+
+        return next;
     }
 
     function markNumberOnBoard(number) {
