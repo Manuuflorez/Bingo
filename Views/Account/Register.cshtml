@@ -1,31 +1,116 @@
 @model Bingoo.Models.RegisterViewModel
 
-<h2>Register</h2>
+<h2 class="form-title">Registro</h2>
 
-<form asp-action="Register" method="post">
-    <div>
-        <label asp-for="Name"></label>
-        <input asp-for="Name" />
-        <span asp-validation-for="Name"></span>
+<form asp-action="Register" method="post" class="register-form">
+    <div class="form-group">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-input" />
+        <span asp-validation-for="Name" class="form-error"></span>
     </div>
-    <div>
-        <label asp-for="Email"></label>
-        <input asp-for="Email" />
-        <span asp-validation-for="Email"></span>
+    <div class="form-group">
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" class="form-input" />
+        <span asp-validation-for="Email" class="form-error"></span>
     </div>
-    <div>
-        <label asp-for="Password"></label>
-        <input asp-for="Password" type="password" />
-        <span asp-validation-for="Password"></span>
+    <div class="form-group">
+        <label asp-for="Password" class="form-label"></label>
+        <input asp-for="Password" type="password" class="form-input" />
+        <span asp-validation-for="Password" class="form-error"></span>
     </div>
-    <div>
-        <label asp-for="ConfirmPassword"></label>
-        <input asp-for="ConfirmPassword" type="password" />
-        <span asp-validation-for="ConfirmPassword"></span>
+    <div class="form-group">
+        <label asp-for="ConfirmPassword" class="form-label"></label>
+        <input asp-for="ConfirmPassword" type="password" class="form-input" />
+        <span asp-validation-for="ConfirmPassword" class="form-error"></span>
     </div>
-    <button type="submit">Register</button>
+    <button type="submit" class="btn btn-primary">Registrar</button>
 </form>
 
-<p>
-    Already have an account? <a asp-action="Login">Login here</a>.
+<p class="login-link">
+    ¿Ya tienes una cuenta? <a asp-action="Login" class="login-link-action">Inicia sesión aquí</a>.
 </p>
+
+<!-- Estilos personalizados para el formulario de registro -->
+<style>
+    body {
+        font-family: 'Comic Sans MS', cursive, sans-serif;
+        background-color: #f0f4f7;
+        color: #333;
+    }
+
+    .form-title {
+        text-align: center;
+        color: #ffcc00;
+        font-size: 28px;
+        margin-bottom: 20px;
+    }
+
+    .register-form {
+        max-width: 400px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 5px;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 10px;
+        border-radius: 5px;
+        border: 2px solid #ddd;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-input:focus {
+        border-color: #ffcc00;
+        outline: none;
+    }
+
+    .form-error {
+        color: #e74c3c;
+        font-size: 12px;
+    }
+
+    .btn-primary {
+        background-color: #ffcc00;
+        border: none;
+        font-size: 18px;
+        padding: 10px 20px;
+        color: #fff;
+        width: 100%;
+        border-radius: 30px;
+        transition: background-color 0.3s ease;
+        cursor: pointer;
+    }
+
+    .btn-primary:hover {
+        background-color: #ff9933;
+    }
+
+    .login-link {
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .login-link-action {
+        color: #3498db;
+        text-decoration: none;
+    }
+
+    .login-link-action:hover {
+        text-decoration: underline;
+    }
+</style>

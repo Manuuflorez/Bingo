@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "93AS7fMhI42T92JLj2QkcZA/cyFkrKy6vr2vyBP1feg=",
+  "Hash": "f8GEHEdV0rg1rQo7nXJIa6yog8ItXjCfwFPVc4HYr68=",
   "Source": "Bingoo",
   "BasePath": "_content/Bingoo",
   "Mode": "Default",
@@ -1193,6 +1193,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\lib\\jquery\\LICENSE.txt"
+    },
+    {
+      "Identity": "C:\\Users\\user\\Documents\\ProyectosDesarrollo\\Bingoo\\wwwroot\\music\\background-music.mp3",
+      "SourceId": "Bingoo",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\user\\Documents\\ProyectosDesarrollo\\Bingoo\\wwwroot\\",
+      "BasePath": "_content/Bingoo",
+      "RelativePath": "music/background-music.mp3",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\music\\background-music.mp3"
     }
   ]
 }

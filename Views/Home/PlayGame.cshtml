@@ -88,56 +88,161 @@
 
 </div>
 
-<!-- Estilos personalizados para el tablero de Bingo -->
 <style>
+    body {
+        font-family: 'Comic Sans MS', cursive, sans-serif;
+        background-color: #f0f4f7;
+        color: #333;
+    }
+
     .bingo-table {
         width: 100%;
         border-collapse: collapse;
         margin-top: 10px;
-    }
-
-    .bingo-table th,
-    .bingo-table td {
-        border: 2px solid #000;
-        text-align: center;
-        padding: 15px;
-        font-size: 20px;
-        width: 50px;
-        height: 50px;
+        background-color: #ffffff;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
     }
 
     .bingo-table th {
-        background-color: #f0f0f0;
+        background-color: #ffcc00;
+        color: #fff;
         font-size: 22px;
+        text-transform: uppercase;
+        padding: 15px;
     }
 
-    .bingo-cell {
-        background-color: #ffffff;
+    .bingo-table td {
+        border: 3px solid #ddd;
+        text-align: center;
+        font-size: 24px;
+        width: 70px;
+        height: 70px;
+        padding: 15px;
         color: #333;
-        cursor: pointer;
+        background-color: #f9f9f9;
         transition: background-color 0.3s ease;
     }
 
-    .bingo-cell.marked {
-        background-color: #4CAF50;
-        color: #fff;
-        font-weight: bold;
+    .bingo-table td:hover {
+        background-color: #f2d5a3;
+        cursor: pointer;
     }
 
-    .bingo-cell:hover {
-        background-color: #ddd;
+    .bingo-cell.marked {
+        background-color: #ff4e50;
+        color: #fff;
+        font-weight: bold;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
 
     .bingo-cell-free {
-        background-color: #FFA500;
+        background-color: #2ecc71;
         color: #fff;
         font-weight: bold;
     }
 
+    .bingo-board {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
     #current-ball {
+        background-color: #ff4e50;
+        color: #fff;
+        padding: 10px 15px;
+        border-radius: 50px;
+        font-size: 28px;
+        font-weight: bold;
+        display: inline-block;
+        margin-top: 15px;
+    }
+
+    /* Colores para las cabeceras de cada columna */
+    th:nth-child(1) { background-color: #f39c12; }
+    th:nth-child(2) { background-color: #e74c3c; }
+    th:nth-child(3) { background-color: #9b59b6; }
+    th:nth-child(4) { background-color: #3498db; }
+    th:nth-child(5) { background-color: #1abc9c; }
+
+    .btn-primary {
+        background-color: #ffcc00;
+        border: none;
+        font-size: 18px;
+        padding: 10px 20px;
+        color: #fff;
+        border-radius: 30px;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background-color: #ff9933;
+    }
+
+    .btn-danger {
+        background-color: #e74c3c;
+        border: none;
+        font-size: 18px;
+        padding: 10px 20px;
+        color: #fff;
+        border-radius: 30px;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-danger:hover {
+        background-color: #c0392b;
+    }
+
+    .btn-success {
+        background-color: #2ecc71;
+        border: none;
+        font-size: 18px;
+        padding: 10px 20px;
+        color: #fff;
+        border-radius: 30px;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-success:hover {
+        background-color: #27ae60;
+    }
+
+    /* Modal de Victoria */
+    .modal-content {
+        background-color: #ecf0f1;
+        border-radius: 15px;
+    }
+
+    .modal-header {
+        background-color: #3498db;
+        color: #fff;
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+    }
+
+    .modal-footer {
+        border-top: none;
+        display: flex;
+        justify-content: center;
+    }
+
+    #draw-ball-btn {
+        box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+        animation: glowing 1.5s infinite;
+        background-color: #ffcc00;
+    }
+
+     #current-ball {
         margin-top: 20px;
         font-size: 24px;
         font-weight: bold;
+    }
+
+    @@keyframes glowing {
+        0% { box-shadow: 0 0 5px rgba(255, 0, 0, 0.5); }
+        50% { box-shadow: 0 0 20px rgba(255, 0, 0, 1); }
+        100% { box-shadow: 0 0 5px rgba(255, 0, 0, 0.5); }
     }
 </style>
 
@@ -311,9 +416,25 @@
         });
     }
 
+    function speakNumber(number) {
+        // Verificar si el navegador soporta la síntesis de voz
+        if ('speechSynthesis' in window) {
+            const msg = new SpeechSynthesisUtterance();
+            msg.text = `Número ${number}`;
+            msg.lang = 'es-ES'; // Idioma: español
+            msg.pitch = 1; // Tonalidad
+            msg.rate = 1; // Velocidad
+            msg.volume = 1; // Volumen
+            window.speechSynthesis.speak(msg); // Ejecutar el texto hablado
+        } else {
+            console.log("La síntesis de voz no es compatible con este navegador.");
+        }
+    }
+
     function drawBall(generatorType) {
         const ball = generateRandomNumber(generatorType);
         connection.invoke("BroadcastBall", roomId, ball);
+        speakNumber(ball);
     }
 
     function generateRandomNumber(generatorType) {
