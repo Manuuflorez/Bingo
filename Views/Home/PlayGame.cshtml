@@ -27,24 +27,24 @@
         <div id="current-ball" class="ball">0</div>
 
         @if (Model.MarkingType == "automatic")
-{
-    <button class="btn btn-success" id="start-game-btn" 
-            style="@(User?.Identity?.Name != Model.Owner || !Model.GameStarted ? "display:none;" : "")">
-        Sacar balotas
-    </button>
-    
-    <button class="btn btn-warning" id="pause-game-btn" style="display:none;">Pausar</button>
-}
-
-@if (Model.MarkingType == "manual")
-{
-    <div>
-        <button class="btn btn-primary" id="draw-ball-btn" 
+        {
+            <button class="btn btn-success" id="start-game-btn"
                 style="@(User?.Identity?.Name != Model.Owner || !Model.GameStarted ? "display:none;" : "")">
-            Sacar una Balota
-        </button>
-    </div>
-}
+                Sacar balotas
+            </button>
+
+            <button class="btn btn-warning" id="pause-game-btn" style="display:none;">Pausar</button>
+        }
+
+        @if (Model.MarkingType == "manual")
+        {
+            <div>
+                <button class="btn btn-primary" id="draw-ball-btn"
+                    style="@(User?.Identity?.Name != Model.Owner || !Model.GameStarted ? "display:none;" : "")">
+                    Sacar una Balota
+                </button>
+            </div>
+        }
 
     </div>
 </div>
@@ -84,10 +84,6 @@
         @TempData["ErrorMessage"]
     </div>
 }
-
-
-
-<!-- Botón de Pausa/Reanudar y Sacar balotas dependiendo del tipo de lanzamiento -->
 
 <!-- Cuadro flotante que muestra que el juego está pausado -->
 <div id="pause-overlay"
@@ -630,18 +626,33 @@
     }
 
     function speakNumber(number) {
-        // Verificar si el navegador soporta la síntesis de voz
-        if ('speechSynthesis' in window) {
-            const msg = new SpeechSynthesisUtterance();
-            msg.text = `Número ${number}`;
-            msg.lang = 'es-ES'; // Idioma: español
-            msg.pitch = 1; // Tonalidad
-            msg.rate = 1; // Velocidad
-            msg.volume = 1; // Volumen
-            window.speechSynthesis.speak(msg); // Ejecutar el texto hablado
-        } else {
-            console.log("La síntesis de voz no es compatible con este navegador.");
-        }
+        return new Promise((resolve, reject) => {
+            // Verificar si el navegador soporta la síntesis de voz
+            if ('speechSynthesis' in window) {
+                const msg = new SpeechSynthesisUtterance();
+                msg.text = `Número ${number}`;
+                msg.lang = 'es-ES'; // Idioma: español
+                msg.pitch = 3; // Tonalidad
+                msg.rate = 1; // Velocidad
+                msg.volume = 1; // Volumen
+
+                // Resolver la promesa cuando la narración termina
+                msg.onend = () => {
+                    resolve();
+                };
+
+                // Si ocurre un error, rechazar la promesa
+                msg.onerror = (e) => {
+                    console.error("Error con la síntesis de voz", e);
+                    reject(e);
+                };
+
+                window.speechSynthesis.speak(msg); // Ejecutar la narración
+            } else {
+                console.log("La síntesis de voz no es compatible con este navegador.");
+                resolve(); // Si no hay soporte, seguir adelante sin narración
+            }
+        });
     }
 
     function drawBall(generatorType) {
