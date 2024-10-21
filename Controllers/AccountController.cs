@@ -12,9 +12,9 @@ namespace Bingoo.Controllers
     public class AccountController : Controller
     {
         private readonly BingoContext _context;
-        private readonly IPasswordHasher<ApplicationUser> _passwordHasher; 
+        private readonly IPasswordHasher<ApplicationUser> _passwordHasher;
 
-          public AccountController(BingoContext context, IPasswordHasher<ApplicationUser> passwordHasher)
+        public AccountController(BingoContext context, IPasswordHasher<ApplicationUser> passwordHasher)
         {
             _context = context;
             _passwordHasher = passwordHasher;
@@ -31,34 +31,42 @@ namespace Bingoo.Controllers
             return View();
         }
 
-       [HttpPost]
+        [HttpPost]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (ModelState.IsValid)
             {
+                // Buscar el usuario por correo electrónico
                 var user = _context.Users.FirstOrDefault(u => u.Email == model.Email);
-
-                if (user != null)
+                
+                if (user == null)
                 {
-                    // Verificar la contraseña encriptada
-                    var passwordVerificationResult = _passwordHasher.VerifyHashedPassword(user, user.Password, model.Password);
-                    if (passwordVerificationResult == PasswordVerificationResult.Success)
-                    {
-                        var claims = new List<Claim>
-                        {
-                            new Claim(ClaimTypes.Name, user.Name),
-                            new Claim(ClaimTypes.Email, user.Email)
-                        };
-
-                        var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-                        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
-
-                        return RedirectToAction("Index", "Home");
-                    }
+                    // Si el usuario no existe, mostrar el mensaje de error
+                    ModelState.AddModelError("Email", "El usuario no existe.");
+                    return View(model);
                 }
 
-                ModelState.AddModelError("", "Credenciales inválidas.");
+                // Verificar la contraseña
+                var passwordVerificationResult = _passwordHasher.VerifyHashedPassword(user, user.Password, model.Password);
+                
+                if (passwordVerificationResult == PasswordVerificationResult.Failed)
+                {
+                    // Si la contraseña es incorrecta, mostrar el mensaje de error
+                    ModelState.AddModelError("Password", "Contraseña incorrecta.");
+                    return View(model);
+                }
+
+                // Si todo es correcto, iniciar sesión
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Name, user.Name),
+                    new Claim(ClaimTypes.Email, user.Email)
+                };
+
+                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
+
+                return RedirectToAction("Index", "Home");
             }
 
             return View(model);
@@ -70,14 +78,14 @@ namespace Bingoo.Controllers
             return View();
         }
 
-         [HttpPost]
+        [HttpPost]
         public IActionResult Register(RegisterViewModel model)
         {
             if (ModelState.IsValid)
             {
                 // Verificar si el nombre de usuario o el correo ya están registrados
                 var existingUser = _context.Users.FirstOrDefault(u => u.Email == model.Email || u.Name == model.Name);
-                
+
                 if (existingUser == null)
                 {
                     var user = new ApplicationUser
@@ -116,7 +124,7 @@ namespace Bingoo.Controllers
             return RedirectToAction("Login");
         }
 
-          [HttpPost]
+        [HttpPost]
         public IActionResult CreateRoom(string generatorType, int speed, string markingType, int maxPlayers, string gameRules)
         {
             // Crear una nueva sala con las opciones seleccionadas
