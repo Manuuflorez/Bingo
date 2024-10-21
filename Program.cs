@@ -2,6 +2,8 @@ using Bingoo.Models; // Asegúrate de que BingoContext está en la carpeta Model
 using Microsoft.EntityFrameworkCore; // Para EF Core
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure; // Para MySQL
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +18,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LogoutPath = "/Account/Logout";
         options.AccessDeniedPath = "/Account/AccessDenied";
     });
+
+
+builder.Services.AddScoped<IPasswordHasher<ApplicationUser>, PasswordHasher<ApplicationUser>>();
 
 // Configurar el contexto de la base de datos con MySQL
 builder.Services.AddDbContext<BingoContext>(options =>

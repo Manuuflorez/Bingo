@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System.Linq;
+using Microsoft.AspNetCore.Identity;
 using System.Threading.Tasks;
 
 namespace Bingoo.Controllers
@@ -11,10 +12,12 @@ namespace Bingoo.Controllers
     public class AccountController : Controller
     {
         private readonly BingoContext _context;
+        private readonly IPasswordHasher<ApplicationUser> _passwordHasher; 
 
-        public AccountController(BingoContext context)
+          public AccountController(BingoContext context, IPasswordHasher<ApplicationUser> passwordHasher)
         {
             _context = context;
+            _passwordHasher = passwordHasher;
         }
 
         [HttpGet]
@@ -28,40 +31,36 @@ namespace Bingoo.Controllers
             return View();
         }
 
-        [HttpPost]
+       [HttpPost]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (ModelState.IsValid)
             {
-                var user = _context.Users.FirstOrDefault(u => u.Email == model.Email && u.Password == model.Password);
-                
-                // Verificación si el usuario no es nulo
+                var user = _context.Users.FirstOrDefault(u => u.Email == model.Email);
+
                 if (user != null)
                 {
-                    // Crear los claims para el usuario
-                    var claims = new List<Claim>
+                    // Verificar la contraseña encriptada
+                    var passwordVerificationResult = _passwordHasher.VerifyHashedPassword(user, user.Password, model.Password);
+                    if (passwordVerificationResult == PasswordVerificationResult.Success)
                     {
-                        new Claim(ClaimTypes.Name, user.Name),  // Usar el nombre del usuario
-                        new Claim(ClaimTypes.Email, user.Email)
-                    };
+                        var claims = new List<Claim>
+                        {
+                            new Claim(ClaimTypes.Name, user.Name),
+                            new Claim(ClaimTypes.Email, user.Email)
+                        };
 
-                    var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                    var authProperties = new AuthenticationProperties
-                    {
-                        // Configurar propiedades como persistencia de cookies si es necesario
-                    };
+                        var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
-                    // Iniciar sesión del usuario
-                    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
+                        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
 
-                    return RedirectToAction("Index", "Home");  // Redirigir al Home después de iniciar sesión
+                        return RedirectToAction("Index", "Home");
+                    }
                 }
 
-                // Si las credenciales son incorrectas
-                ModelState.AddModelError("", "Intento de inicio de sesión inválido");
+                ModelState.AddModelError("", "Credenciales inválidas.");
             }
 
-            // Si el modelo no es válido, volver a la vista con el modelo
             return View(model);
         }
 
@@ -71,23 +70,25 @@ namespace Bingoo.Controllers
             return View();
         }
 
-        [HttpPost]
+         [HttpPost]
         public IActionResult Register(RegisterViewModel model)
         {
             if (ModelState.IsValid)
             {
-                var existingUser = _context.Users.FirstOrDefault(u => u.Email == model.Email);
+                // Verificar si el nombre de usuario o el correo ya están registrados
+                var existingUser = _context.Users.FirstOrDefault(u => u.Email == model.Email || u.Name == model.Name);
                 
-                // Verificar si el correo electrónico ya está registrado
                 if (existingUser == null)
                 {
                     var user = new ApplicationUser
                     {
                         Name = model.Name,
                         Email = model.Email,
-                        Password = model.Password, // Considera encriptar la contraseña en producción
                         Credits = 1000 // Créditos iniciales
                     };
+
+                    // Encriptar la contraseña antes de guardarla
+                    user.Password = _passwordHasher.HashPassword(user, model.Password);
 
                     _context.Users.Add(user);
                     _context.SaveChanges();
@@ -95,17 +96,22 @@ namespace Bingoo.Controllers
                     return RedirectToAction("Login");
                 }
 
-                // Si el correo ya está registrado
-                ModelState.AddModelError("", "El correo electrónico ya está registrado");
+                // Si el correo o el nombre de usuario ya están registrados
+                if (_context.Users.Any(u => u.Name == model.Name))
+                {
+                    ModelState.AddModelError("Name", "El nombre de usuario ya está en uso.");
+                }
+                if (_context.Users.Any(u => u.Email == model.Email))
+                {
+                    ModelState.AddModelError("Email", "El correo electrónico ya está registrado.");
+                }
             }
 
-            // Si el modelo no es válido, volver a la vista de registro
             return View(model);
         }
 
         public async Task<IActionResult> Logout()
         {
-            // Cerrar sesión del usuario
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Login");
         }
